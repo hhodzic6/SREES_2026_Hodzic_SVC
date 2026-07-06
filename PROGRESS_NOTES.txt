@@ -1,0 +1,377 @@
+================================================================================
+SREES_2026_Hodzic_SVC - PROGRESS NOTES / BUILD LOG
+================================================================================
+Tema: Static Var Compensator - SVC Type I, SVC Type II (dinamicki konvertor)
+Student: Haris Hodzic (19145)  [iz "SREES - Teme.xlsx" / priloženog PDF-a]
+Literatura: F. Milano, "Power System Modelling and Scripting" (Ch. 19.1 - FACTS
+            Devices, "Static Var Compensator"), i Acha et al., "Flexible AC
+            Transmission Systems: Modelling and Control".
+Napisano od strane Claude (Sonnet 5) na zahtjev korisnika, 2026-07-06.
+Ovaj fajl vodim ažurno kroz cijeli proces - šta je urađeno, gdje se šta nalazi,
+koje sam pretpostavke napravio.
+
+AŽURIRANO 2026-07-06 (kasnije istog dana): korisnik je naveo da je dTwin.exe stvarno
+instaliran (C:\Program Files\IDz\Digital Twin) i da postoji Visual Studio Code na
+mašini. Instalirao sam Visual Studio Build Tools 2022 (MSVC) i STVARNO SAM
+KOMPAJLIRAO I POKRENUO cijeli projekat - vidi novo poglavlje "0) STVARNA VERIFIKACIJA
+BUILD-A" ispod za kompletnu priču (4 pronađene i ispravljene greške, 2 u mom kodu, 2
+nedostajuća SDK zaglavlja rekonstruisana uz odobrenje korisnika).
+
+================================================================================
+0) STVARNA VERIFIKACIJA BUILD-A (2026-07-06, kasnije istog dana)
+================================================================================
+Setup:
+  - Instaliran Visual Studio Build Tools 2022 (MSVC 19.44 / 14.44.35207) preko
+    vs_buildtools.exe bootstrapper-a, workload Microsoft.VisualStudio.Workload.VCTools
+    + Windows 11 SDK (10.0.22621.0) - potreban za rc.exe/mt.exe (resource/manifest
+    alati), koji NISU uključeni u VCTools workload bez --includeRecommended.
+  - cmake 3.19.7 (paketovan uz MATLAB R2023a, "C:\Program Files\MATLAB\R2023a\bin\
+    win64\cmake\bin\cmake.exe" - koristan jer na mašini nije bio instaliran samostalan
+    cmake). Ova verzija NE ZNA za generator "Visual Studio 17 2022" (dodano tek u
+    cmake 3.21+), pa je korišten "NMake Makefiles" generator umjesto Visual Studio
+    generatora, unutar Developer Command Prompt okruženja (vcvars64.bat).
+  - natID.SDK junction: C:\Users\User\natID.SDK -> "sres projekat\dsdka\natID.SDK"
+    (CMakeLists.txt fajlovi očekuju SDK na %USERPROFILE%\natID.SDK).
+
+Greške pronađene STVARNIM kompajliranjem (nešto što statička analiza nije mogla uhvatiti):
+  1. Converter.h i DmodlWriter.h su uključivali <td/StringUtils.h> pretpostavljajući da
+     odatle dolazi td::MutableString - u stvari je deklarisan u <td/MutableString.h>.
+     ISPRAVLJENO (uključen ispravan header).
+  2. MatpowerCase.cpp je koristio td::findFirstNonWhiteSpace() bez da uključi
+     <td/StringUtils.h> (gdje je ta funkcija stvarno deklarisana). ISPRAVLJENO.
+  3. arch/MemoryOut.h (koristi ga sc/IPlugin.h, i EQPlugin/TestEQPlugin primjeri) NE
+     POSTOJI nigdje u instaliranoj kopiji natID.SDK-a - provjereno pretragom cijelog
+     SDK stabla. Ovo bi spriječilo kompajliranje BILO KOJEG natID dTwin plugina na
+     ovoj instalaciji, ne samo ovog projekta. Uz izričito odobrenje korisnika,
+     rekonstruisan je minimalan, samostalan arch/MemoryOut.h (jednostavan rastući
+     memorijski bafer: allocate/open/put/writeToFile/release - vidi komentar na vrhu
+     tog fajla za potpuno objašnjenje i UPOZORENJE da je ovo rekonstrukcija, ne
+     originalni vendor kod). Dodan kao NOVI fajl u
+     natID.SDK/Common/Include/arch/MemoryOut.h (postojeći SDK fajlovi nisu mijenjani).
+  4. syst/LibraryLoader.h (koristi ga TestEQPlugin/MainView.h obrazac za dinamičko
+     učitavanje plugin .dll-a) TAKOĐER ne postoji u SDK-u. Rekonstruisan kao tanak
+     omotač oko LoadLibrary/GetProcAddress (Windows) / dlopen/dlsym (ostalo) - mnogo
+     manji rizik od #3 pošto je to samo standardni OS API, ne proprietary format.
+     Dodan kao NOVI fajl u natID.SDK/Common/Include/syst/LibraryLoader.h.
+
+Rezultat:
+  - SVCPluginSol: KOMPAJLIRAN I LINKOVAN uspješno -> svcConv.dll (213 KB) u
+    natID.RAMDisk/Out/SVCPluginSol/Release/.
+  - TestSVCPluginSol: KOMPAJLIRAN I LINKOVAN uspješno -> testSvcPlugin.exe u
+    natID.RAMDisk/Out/TestSVCPluginSol/Release/.
+  - Samostalan CLI test (van repozitorija, samo za verifikaciju) koji direktno poziva
+    Converter::run(...) je pokrenut na case9.m + svc_config_case9.xml: konverzija je
+    ZAVRŠENA USPJEŠNO (progress callback je ispravno prijavljivao 0%->100%), generisan
+    je ispravan .dmodl (9837 bajtova) i .vmodl (1879 bajtova). Vrijednosti Y-bus matrice
+    u izlazu (npr. B_1_1=-17.3611111111, B_9_9=-17.3382300964) TAČNO se poklapaju sa
+    prošlogodišnjim (nezavisno implementiranim) Python konvertorom za isti case9 slučaj
+    (amina/Seminarski rad/converter_PF_rectangular/output/case9_L_Z.dmodl) - jaka
+    potvrda ispravnosti Ybus izgradnje. Kompletan izlaz sačuvan u repo-u pod
+    src/TestSVCPlugin/res/testData/output/case9_svc.dmodl (i .vmodl).
+  - svcConv.dll kopiran u C:\Users\User\ba.natID\dTwin\plugins\ (pravo mjesto za
+    dTwin da ga pronađe) i PRAVI dTwin.exe je uspješno pokrenut (ostao stabilan 10+
+    sekundi, prozor naslovljen "dTwin") - nije se srušio sa pluginom prisutnim.
+  - testSvcPlugin.exe (samostalni test host) se pokreće ali se TIHO (bez greške/pada,
+    exit code prazan/0, bez event log zapisa) gasi nakon par sekundi kad se pokrene
+    izvan Visual Studio IDE-a (najvjerovatnije ne pronalazi svoje GUI resurse na
+    očekivanoj putanji bez "-devResPath" argumenta koji inače postavlja VS IDE tokom
+    debug-a) - NISAM uspio ovo dalje dijagnostikovati bez vizuelnog pristupa. Pravi
+    dTwin.exe (koji ima kompletno podešene resurse) je bolji način za stvarno testiranje
+    GUI-a plugina - i ON radi.
+
+ŠTA JOŠ TREBAŠ TI PROVJERITI (vizuelno, ja nemam pristup desktop GUI-u):
+  - Otvoriti dTwin (već je pokrenut/otvoren dok pišem ovo, ili ga ponovo pokreni),
+    pronaći "SVC Type I/II Converter" u meniju plugina, kliknuti, isprobati konverziju
+    kroz GUI (Convert dugme, progress bar tokom konverzije - trebao bi se vidjeti kako
+    raste 0->100% dok radi, pošto je na worker thread-u).
+  - Učitati generisani .dmodl i pokrenuti simulaciju kroz vrijeme (dTwin-ov DAE solver)
+    da se vidi da li SVC Type I/II dinamika ima očekivano ponašanje.
+  - Ako testSvcPlugin.exe treba da radi samostalno (van pune dTwin app), istraži
+    "-devResPath" argument ili zašto ne pronalazi res/ folder u Release build-u.
+
+================================================================================
+1) ŠTA JE PROČITANO / ISTRAŽENO PRIJE PISANJA KODA
+================================================================================
+- "SREES - Teme  - Sheet1.pdf" (Downloads) -> potvrda teme: SVC Type I/II,
+  dinamički konvertor, config XML file, test case-ovi case9/30/118/300, C++,
+  konverzija u jednom threadu + real-time progress u drugom, GUI, plugin (dll).
+- dsdka/natID.Examples/dTwin/Plugin/EQPlugin  -> referentni primjer plugina
+  (EQPlugin.h/.cpp, WindowPlugin.h, TabView.h, ViewConv.h, ViewOptions.h,
+  CMakeLists.txt, EQPlugin.cmake, res/*.xml) - kopiran je ARHITEKTURA (IPlugin
+  registracija, GUI raspored, arch::MemoryOut korištenje, cmake obrazac), ali
+  NIJE mijenjan nijedan fajl iz primjera (kako je traženo).
+- dsdka/natID.Examples/dTwin/Plugin/TestEQPlugin -> obrazac za samostalni host
+  za testiranje plugina (bez pune dTwin aplikacije).
+- dsdka/natID.Examples/GUI/TestThread/src/MainView.h -> obrazac za thread +
+  gui::ProgressIndicator + gui::AsyncFn/asyncCall.
+- dsdka/natID.Examples/GUI/TestWindowsAndDialogs/src/ViewProgress.h -> ČISTIJI/
+  noviji obrazac za real-time progress: gui::thread::asyncExecInMainThread
+  (koristi se u ovom projektu, vidi ViewConv.h).
+- dsdka/natID.Examples/dTwin/MatrixTests/{TestDense,TestSparse} -> natID-ov
+  dense::DblMatrix i sparse::IDblMatrix/ISolver API.
+- amina/Seminarski rad (prošlogodišnji projekat, DRUGA tema - "Konvertor tokova
+  snaga: pravougaone koordinate") -> VAŽNO: njen deliverable je Python skripta
+  (matpower_to_dmodl.py / RectangularConverter.py), NE natID C++ GUI plugin.
+  Njen .dmodl OUTPUT (Header/Model/Vars/Params/NLEs/Limits sekcije, format za
+  Slack/PV/PQ čvorove) je iskorišten kao REFERENTNI FORMAT za generisani tekst,
+  ali arhitektura (Python, bez GUI-a, bez natID matrica) NIJE kopirana, pošto
+  ne zadovoljava uputstvo "isključivo korištenje dense/sparse matrica iz natID"
+  niti "GUI; plugin u formi dll". Ovaj projekat radi CIJELI pipeline (parsiranje
+  .m fajla, Ybus, DAE generisanje) u C++-u koristeći natID matrice.
+- Milano-ova knjiga (PDF) -> tekst poglavlja 19.1 izvučen preko `pdftotext`
+  (poppler nije bio dostupan za pdftoppm, ali `pdftotext` jeste - u Git Bash
+  PATH-u, C:\Program Files\Git\mingw64\bin\pdftotext.exe). Sadrži tačne
+  jednačine SVC Type I/II (eq. 19.1-19.5) i default parametre (Table D.10/D.11,
+  IEEE14 primjer, bus 9, vref=1.0563).
+
+================================================================================
+2) VAŽNA ISPRAVKA NAĐENA VALIDACIONIM SKRIPTOM (pročitaj ovo!)
+================================================================================
+OCR ekstrakcija PDF-a (pdftotext) je "pojela" pi simbole i strukturu zagrada u
+jednačini (19.1) za susceptansu SVC Type I. Prije nego sam ugradio formulu u
+C++, napravio sam kratku Python validacionu skriptu (van repozitorija - vidi
+"validate_svc_equations.py" jedan folder iznad ovog repo-a, u
+"sres projekat/validate_svc_equations.py") koja je otkrila da je moja PRVA
+rekonstrukcija formule imala OBRNUT ZNAK (davala je negativnu/induktivnu
+vrijednost tamo gdje treba biti pozitivna/kapacitivna, i obrnuto).
+
+Ispravna formula (standardna TCR-FC formula iz FACTS literature, potvrđena i
+protiv fizičkih granica i protiv smjera regulacije iz Milano-ovog blok
+dijagrama):
+
+    B_SVC(sigma) = 1/xC - (2*pi - 2*sigma + sin(2*sigma)) / (pi*xL)
+
+  - sigma = pi/2 (TCR potpuno provodi)  -> B = 1/xC - 1/xL
+  - sigma = pi   (TCR potpuno blokiran) -> B = 1/xC  (čisti fiksni kondenzator)
+  - Q_svc = B_SVC * vh^2  (pozitivno B = kapacitivno = injektuje Q = podiže napon)
+
+Ovo je implementirano u:
+  src/SVCPlugin/src/DmodlWriter.cpp -> appendSvcTypeIBSuscExpr() (anonimni
+  namespace na vrhu fajla)
+
+Pokreni validacionu skriptu (ne treba numpy, čisti Python 3):
+    python validate_svc_equations.py
+Sve tri provjere (fizičke granice, smjer step-odgovora, anti-windup) prolaze.
+
+NAPOMENA: Ovo je i dalje samo REKONSTRUKCIJA jednačine iz djelimično oštećenog
+OCR-a + opšteg poznavanja FACTS/TCR literature (formula je standardna i
+pojavljuje se u gotovo svakom FACTS udžbeniku). Preporučujem da PRIJE ODBRANE
+ručno uporediš jednačinu 19.1 iz same knjige (str. 413) sa onim što piše u
+DmodlWriter.cpp, pošto ja nemam garanciju da OCR nije oštetio i nešto drugo
+što validaciona skripta ne pokriva (npr. tačan koeficijent KD ili raspon
+sigmaMin/sigmaMax - ovi brojevi su prepisani iz Table D.10/D.11 bez OCR
+sumnje, pošto brojevi nisu imali pi simbole).
+
+================================================================================
+3) STRUKTURA REPOZITORIJA
+================================================================================
+SREES_2026_Hodzic_SVC/
+  PROGRESS_NOTES.txt          <- ovaj fajl
+  docs/                        <- TODO: LyX izvještaj (vidi odjeljak 7 ispod)
+  presentation/
+    ReadMe.txt                  <- vrijeme prezentacije (popuni prije predaje!)
+  src/
+    SVCPlugin/                  <- dTwin plugin (dll), solution "SVCPluginSol"
+      CMakeLists.txt
+      SVCPlugin.cmake
+      res/{DevRes.xml,main.xml,tr/BA,tr/EN}
+      src/
+        MatpowerCase.h/.cpp      - parsira .m fajl (bus/gen/branch) u dense::DblMatrix
+        SvcConfig.h/.cpp         - parsira SVC XML config (xml::FileParser)
+        YBusBuilder.h/.cpp       - gradi Ybus (dense scratch + natID sparse solver
+                                   za DC power-flow inicijalizaciju uglova)
+        DmodlWriter.h/.cpp       - generiše .dmodl/.vmodl TEKST (glavna matematika)
+        Converter.h/.cpp         - orkestrira sve gore + progress callback
+        SVCPlugin.h/.cpp         - sc::IPlugin implementacija, getPluginInterface()
+        WindowPlugin.h, TabView.h, ViewConv.h, ViewOptions.h  - GUI (natGUI)
+    TestSVCPlugin/               <- samostalni host za testiranje plugina bez dTwin-a
+      CMakeLists.txt
+      testSVCPlugin.cmake
+      res/testData/
+        case9.m, case30.m, case118.m, case300.m   (iz MATPOWER 8.0, kopirano iz
+                                                     amina/.../matpower8.0/data/)
+        svc_config_case9.xml, svc_config_case30.xml,
+        svc_config_case118.xml, svc_config_case300.xml
+      src/ (Application.h, main.cpp, MainWindow.h, MainView.h, MenuBar.h, ToolBar.h)
+
+Van repozitorija (ne prilaže se, samo pomoćni alat):
+  sres projekat/validate_svc_equations.py  - Python validacija SVC jednačina
+
+================================================================================
+3b) STATIČKE PROVJERE KOJE SAM MOGAO URADITI BEZ KOMPAJLERA
+================================================================================
+Na ovoj mašini nije instaliran cmake ni C++ kompajler (provjereno), pa nisam
+mogao stvarno kompajlirati kod. Uradio sam umjesto toga:
+  - brace/paren balans provjeru za SVE .h/.cpp fajlove (python skripta) -> OK
+    za sve fajlove.
+  - automatsku provjeru da broj "%" printf-stil specifikatora u svakom
+    appendFormat(...)/format(...) pozivu odgovara broju argumenata (python
+    skripta, pretražuje sve .cpp fajlove) -> OK za SVE pozive (ovo je bio
+    najveći rizik za "glupu" grešku, pošto neki appendFormat pozivi imaju i do
+    14-21 argumenata, npr. u DmodlWriter.cpp NLE i Params generisanju).
+  - ručnu provjeru da se potpisi funkcija poklapaju izmedju .h deklaracija i
+    .cpp definicija, i izmedju poziva i deklaracija (Converter, DmodlWriter,
+    YBusBuilder, MatpowerCase, SvcConfig, SVCPlugin).
+Ovo NE ZAMJENJUJE pravu kompilaciju - prva stvarna provjera MORA biti build na
+tvojoj mašini sa instaliranim Visual Studio/Xcode + natID SDK-om.
+
+================================================================================
+4) ARHITEKTONSKE ODLUKE (i zašto)
+================================================================================
+a) Dense vs Sparse matrice:
+   - MatpowerCase drži bus/gen/branch tabele kao dense::DblMatrix (prirodna
+     reprezentacija tabelarnih podataka).
+   - Ybus (G,B) se AKUMULIRA u dense::DblMatrix scratch (NxN, N<=300 je trivijalno
+     malo za dense), jer natID-ov sparse::IDblMatrix/ISolver NEMA API za čitanje
+     nazad proizvoljnog elementa (i,j) nakon sastavljanja (samo addTriple + solve
+     + x(i) za rješenje) - dobar za rješavanje sistema, nepogodan za "ispiši mi
+     sve G_i_j/B_i_j parametre" korak koji treba DmodlWriter-u.
+   - natID-ov SPARSE solver (sparse::createDblSolver, addTriple, factorize,
+     solve, x(i)) se ipak KORISTI - za pravi, netrivijalan proračun: DC
+     power-flow procjenu početnih uglova napona (B'*theta=P, slack red
+     zamijenjen identitetom), umjesto flat-start-a za sve Vars. Ako solve ne
+     uspije, tiho se vraća na flat start (theta=0) - nije fatalna greška.
+     Vidi YBusBuilder::build().
+   - Ovo je bio EKSPLICITAN izbor korisnika (upitan preko AskUserQuestion):
+     "sparse za Ybus, dense za male DAE matrice" - implementirano u ovom duhu,
+     s tim da je "Ybus je sparse" zadovoljeno kroz sparse DC-init solve (stvarna
+     upotreba), a ne kroz besmislenu dupliciranu sparse kopiju koja se nikad ne
+     čita.
+
+b) Cijeli pipeline u C++ (ne Python preprocessing kao amina/Emir):
+   - Korisnik je eksplicitno potvrdio ovaj izbor (AskUserQuestion) zbog
+     uputstva "isključivo korištenje dense/sparse matrica iz natID" za SVE
+     matrice - MatpowerCase parsira .m fajl direktno u C++, Ybus se gradi u
+     C++, DAE tekst se generiše u C++. Nema Python koraka u samom deliverable-u.
+
+c) XML SVC config format (src/TestSVCPlugin/res/testData/svc_config_case*.xml):
+   <SVCConverterConfig>
+     <Files><InputFile path=".../case9.m"/><OutputFile name="..." directory="..."/></Files>
+     <Simulation>maxIter/report/maxReps/startTime/dTime/endTime/method</Simulation>
+     <Options>EnableNLEComments/GeneratorLimits/UseDCAngleInit</Options>
+     <DefaultsSVCTypeI .../>  <DefaultsSVCTypeII .../>   (Milano Table D.10/D.11)
+     <SVCNodes>
+       <Node bus="5" type="SVCTypeI" vref="1.02" .../>   <- override po potrebi
+       <Node bus="9" type="SVCTypeII" vref="1.00" .../>
+     </SVCNodes>
+   </SVCConverterConfig>
+   Svaki bus KOJI NIJE naveden pod <SVCNodes> zadržava svoj originalni statički
+   model (Slack/PV/PQ), potpuno isto kao amina/Emir-ov static converter (ista
+   NLE forma, provjereno protiv njenog case9_L_Z.dmodl output-a).
+
+d) DAE generisani model (DmodlWriter.cpp) - struktura:
+   Header -> Model[type=DAE] -> Vars[out=true] -> Params -> ODEs -> NLEs
+   -> Limits -> PostProc -> end
+   - Standardni čvorovi: identična NLE forma kao amina (Slack: e/f=spec;
+     PV: P + naponska regulacija sa Q-limit switching-om preko Limits bloka;
+     PQ: P i Q spec).
+   - SVC čvorovi: P jednačina = mreža - load (SVC ~0 P), Q jednačina = mreža -
+     B_SVC(sigma)*vh^2 + Q_load (Type I) ili - bSvc*vh^2 + Q_load (Type II).
+     ODEs: Milano eq. 19.3 (Type I: vM, sigma sa anti-windup na sigma) i eq.
+     19.4 (Type II: bSvc sa anti-windup). Anti-windup je implementiran kao
+     bool zastavica (cSigma<N>Free / cB<N>Free) koja se provjerava i u ODEs
+     (zamrzava izvod na 0 kad je van granica) i u Limits (detektuje prelazak
+     granice, kleštuje vrijednost, signalizira TooLow/TooHigh) - isti obrazac
+     kao amina-in PV generator Q-limit switching.
+   - vref: iz XML config-a (ako je naveden) ili iz .m fajla (generator Vg ako
+     postoji na tom busu, inače bus.Vm) - vidi DmodlWriter.cpp:effectiveVm().
+
+e) Threading (real-time progress indicator, obavezan zahtjev iz uputstva):
+   - ViewConv::startConversion() pokreće std::thread koji poziva
+     convertToSvcModel() (radi CIJELI posao: parsiranje, Ybus, DAE generisanje).
+   - NLE generisanje (DmodlWriter::writeNLEs) poziva progressCb(0..1) za svaki
+     bus - to je dominantan trošak za case300 (300 čvorova).
+   - Progress se šalje nazad na GUI thread PRECIZNO kroz
+     gui::thread::asyncExecInMainThread (obrazac iz
+     natID.Examples/GUI/TestWindowsAndDialogs/src/ViewProgress.h), NIKAD
+     direktnim pristupom gui:: widgetima sa worker thread-a.
+   - Dodao sam std::shared_ptr<bool> _alive "guard" u ViewConv da spriječim
+     use-after-free ako se plugin prozor zatvori dok je konverzija još u toku
+     (destruktor postavi *_alive=false i onda .join() na thread).
+
+================================================================================
+5) POZNATI CMAKE BUG (kolegin savjet o "zakomentariši zadnju liniju")
+================================================================================
+EQPlugin.cmake (originalni primjer) na kraju zove:
+    setIDEPropertiesForLib(${EQPLUGIN_NAME})
+Pretražio sam CIJELI natID.SDK/DevEnv/*.cmake i ta funkcija NE POSTOJI nigdje
+(postoje samo setIDEPropertiesForExecutable i setIDEPropertiesForGUIExecutable,
+u Common.cmake). Ovo potvrđuje kolegin savjet - CMake configure će pući na toj
+liniji sa "Unknown CMake command" greškom.
+
+U SVCPlugin.cmake sam TU LINIJU IZOSTAVIO (ne samo zakomentarisao) i ostavio
+komentar objašnjenje. Ako tvoja verzija natID.SDK ipak definiše tu funkciju
+(možda noviji SDK), otkomentariši poziv na dnu SVCPlugin.cmake.
+
+================================================================================
+6) BUILD UPUTSTVO
+================================================================================
+Preduslov: natID.SDK mora biti raspakovan u $HOME/natID.SDK (Windows:
+%USERPROFILE%\natID.SDK, macOS/Linux: ~/natID.SDK) - isto kao za sve ostale
+natID primjere. Ovdje na ovoj mašini je SDK u
+"sres projekat/dsdka/natID.SDK" - PREKOPIRAJ ili linkuj u %USERPROFILE%\natID.SDK
+prije build-a (ili prilagodi NATID_SDK_ROOT u CMakeLists.txt fajlovima).
+
+1. cmake configure + build za SVCPluginSol (src/SVCPlugin/CMakeLists.txt)
+   -> produkuje svcConv.dll (Windows) / .dylib (macOS) / .so (Linux) u
+   natID.RAMDisk/Out/SVCPluginSol/<Release|Debug>/
+2. cmake configure + build za TestSVCPluginSol (src/TestSVCPlugin/CMakeLists.txt)
+   -> produkuje testSvcPlugin.exe koji učitava svcConv.dll iz istog build
+   foldera automatski (PLUGIN_DIR makro, vidi MainView.h)
+3. Za korištenje unutar prave dTwin aplikacije: kopiraj svcConv.dll (+ .lib
+   ako treba) u dTwin-ov plugins folder (npr. %USERPROFILE%\ba.natID\dTwin\plugins)
+
+AŽURIRANO: kod JE STVARNO KOMPAJLIRAN i pokrenut na ovoj mašini (MSVC, Visual Studio
+Build Tools 2022) - vidi poglavlje "0) STVARNA VERIFIKACIJA BUILD-A" na vrhu ovog
+fajla za punu priču (4 pronađene i ispravljene greške). Oba solution-a
+(SVCPluginSol, TestSVCPluginSol) se kompajliraju i linkuju bez grešaka. Ako
+kompajliraš na DRUGOM sistemu (npr. macOS, što je i obavezno prema uputstvu
+predmeta "kompajlirano na dva sistema"), imaj na umu odjeljak "Napomena o
+instaliranom natID.SDK-u" u docs/izvjestaj.tex - ako ta instalacija SDK-a ima
+kompletna arch/MemoryOut.h i syst/LibraryLoader.h zaglavlja (za razliku od ove
+Windows instalacije), NEMOJ dodavati rekonstruisane verzije, koristi originalne.
+
+Testiranje: otvori testSvcPlugin, klikni "Open" na toolbar-u, izaberi neki od
+res/testData/case*.m fajlova kao MATPOWER input, odgovarajući
+svc_config_case*.xml kao config, izaberi output .dmodl ime, klikni Convert.
+
+================================================================================
+7) ŠTA JOŠ NEDOSTAJE (TODO prije predaje)
+================================================================================
+- docs/ folder: LyX izvještaj (srrees_izvjestaj.lyx stil kao kod amine) - NIJE
+  napisan, samo je folder napravljen. Sadržaj treba: opis SVC Type I/II teorije
+  (Milano 19.1), opis arhitekture plugina, prikaz generisanog .dmodl-a,
+  rezultati simulacije (grafici iz dTwin-a nakon što pokreneš model), poređenje
+  sa Milano Example 19.1 (Fig 19.4).
+- presentation/: napravi finalnu prezentaciju (PowerPoint ili sl.) i upiši
+  vrijeme trajanja u presentation/ReadMe.txt (5-8 min po uputstvu).
+- OpenDraw dijagrami: uputstvo traži OpenDraw za grafike/dijagrame u
+  dokumentaciji - nisam ga koristio (nemam pristup GUI alatu odavde); ti
+  trebaš napraviti blok-dijagrame (npr. SVC Type I/II kontrolni blok dijagram,
+  arhitektura plugina) u OpenDraw-u za docs/.
+- GitHub: repo folder je lokalno spreman; TI trebaš kreirati GitHub repo
+  "SREES_2026_Hodzic_SVC" i push-ovati (ja nemam tvoje GitHub kredencijale niti
+  smijem to raditi bez eksplicitnog dogovora).
+- Kompajliranje na 2 sistema (macOS + Windows npr.) - nisam mogao testirati
+  ni na jednom odavde (nema toolchain-a). Prioritet #1 kad dobiješ pristup
+  računaru sa Visual Studio/natID SDK instaliranim.
+- Provjera dTwin DSL sintakse uživo: pretpostavio sam da DAE model type
+  podržava kombinaciju Vars/Params/ODEs/NLEs/Limits/PostProc u tom redoslijedu
+  (earthquake primjer ima Vars/Params/ODEs/PostProc bez NLEs, amina-in NL
+  primjer ima Vars/Params/NLEs/Limits bez ODEs - moj DAE kombinuje oba stila).
+  Ovo NISAM mogao provjeriti bez pokretanja dTwin-a - prva stvar za provjeriti
+  kad učitaš generisani .dmodl u pravi dTwin.
+- Code style: pregledaj još jednom da SVE bude lower camel case + "_" prefiks
+  za članove klase (trudio sam se dosljedno, ali vrijedi dvostruka provjera).
+
+================================================================================
+8) TEST SLUČAJEVI - GDJE SU SVC ČVOROVI POSTAVLJENI
+================================================================================
+case9   -> bus 5 (SVC Type I), bus 9 (SVC Type II)   [bus9 = isti izbor kao
+                                                       Milano-ov IEEE14 primjer]
+case30  -> bus 7 (SVC Type I), bus 8 (SVC Type II)
+case118 -> bus 11 (SVC Type I), bus 16 (SVC Type II)
+case300 -> bus 9 (SVC Type I), bus 13 (SVC Type II)
+(svi su PQ/load busevi u originalnim MATPOWER case-ovima - slobodno promijeni
+izbor u odgovarajućem svc_config_case*.xml ako želiš druge čvorove)
+================================================================================

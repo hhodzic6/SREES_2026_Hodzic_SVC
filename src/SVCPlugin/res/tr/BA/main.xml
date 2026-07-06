@@ -1,0 +1,26 @@
+<?xml version='1.0'?>
+<DevRes>
+	<Translations>
+		<Res id="SVC Plugin" tr="SVC Plugin"/>
+		<Res id="Converter" tr="Konvertor"/>
+		<Res id="Options" tr="Opcije"/>
+
+		<Res id="MATPOWER case (.m):" tr="MATPOWER slučaj (.m):"/>
+		<Res id="SVC config (.xml):" tr="SVC konfiguracija (.xml):"/>
+		<Res id="Out File Name:" tr="Izlazni fajl:"/>
+		<Res id="Status:" tr="Status:"/>
+		<Res id="PLSVC_EnterFN" tr="Putanja do MATPOWER .m fajla (case9/case30/case118/case300)"/>
+		<Res id="Info" tr="Info"/>
+		<Res id="Convert" tr="Konvertuj"/>
+		<Res id="openMatpowerCase" tr="Otvori MATPOWER slučaj"/>
+		<Res id="openSvcConfig" tr="Otvori SVC konfiguraciju"/>
+		<Res id="createDmodl" tr="Kreiraj dmodl"/>
+
+		<Res id="Override Header/solver options below (otherwise use the XML config values):" tr="Prepiši Header/solver opcije ispod (u suprotnom se koriste vrijednosti iz XML konfiguracije):"/>
+		<Res id="Max iterations:" tr="Maks. iteracija:"/>
+		<Res id="dTime [s]:" tr="dTime [s]:"/>
+		<Res id="End time [s]:" tr="Krajnje vrijeme [s]:"/>
+		<Res id="Seed initial angles from a sparse DC power-flow solve (natID sparse solver)" tr="Inicijalni uglovi napona iz sparse DC power-flow proračuna (natID sparse solver)"/>
+		<Res id="SVC_Options_Help" tr="Ove opcije se primjenjuju iznad onoga što je navedeno u odabranom SVC XML konfiguracijskom fajlu.&#10;Dodjela tipa čvora (koji čvor je SVC Type I, SVC Type II ili standardni) uvijek dolazi iz XML konfiguracijskog fajla, na kartici Konvertor."/>
+	</Translations>
+</DevRes>

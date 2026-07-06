@@ -1,0 +1,12 @@
+<?xml version='1.0'?>
+<DevRes>
+	<Translations>
+		<Res id="appTitle" tr="Test SVC Plugin Host"/>
+		<Res id="Quit" tr="Quit"/>
+		<Res id="open" tr="Open"/>
+		<Res id="openTT" tr="Load the SVC converter plugin (svcConv)"/>
+		<Res id="Name:" tr="Name:"/>
+		<Res id="Location:" tr="Location:"/>
+		<Res id="Visual model:" tr="Visual model:"/>
+	</Translations>
+</DevRes>

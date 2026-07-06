@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SVCConverterConfig>
+
+	<Files>
+		<InputFile path="case118.m"/>
+		<OutputFile name="case118_svc" directory="./output/"/>
+	</Files>
+
+	<Simulation>
+		<maxIter>100</maxIter>
+		<report>AllDetails</report>
+		<maxReps>-1</maxReps>
+		<startTime>0</startTime>
+		<dTime>0.01</dTime>
+		<endTime>10</endTime>
+		<method>RK2</method>
+	</Simulation>
+
+	<Options>
+		<EnableNLEComments>true</EnableNLEComments>
+		<GeneratorLimits>true</GeneratorLimits>
+		<UseDCAngleInit>true</UseDCAngleInit>
+	</Options>
+
+	<DefaultsSVCTypeI  K="10.0" KD="0.0" KM="1.0" T1="0.05" T2="0.01" TM="0.01" xL="0.1" xC="0.1" sigmaMax="3.14159" sigmaMin="-3.14159"/>
+	<DefaultsSVCTypeII Kr="10.0" Tr="0.05" bMax="0.20" bMin="-0.05"/>
+
+	<SVCNodes>
+		<Node bus="11" type="SVCTypeI"  vref="1.00"/>
+		<Node bus="16" type="SVCTypeII" vref="1.00"/>
+	</SVCNodes>
+
+</SVCConverterConfig>

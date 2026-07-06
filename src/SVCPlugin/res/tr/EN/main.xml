@@ -1,0 +1,26 @@
+<?xml version='1.0'?>
+<DevRes>
+	<Translations>
+		<Res id="SVC Plugin" tr="SVC Plugin"/>
+		<Res id="Converter" tr="Converter"/>
+		<Res id="Options" tr="Options"/>
+
+		<Res id="MATPOWER case (.m):" tr="MATPOWER case (.m):"/>
+		<Res id="SVC config (.xml):" tr="SVC config (.xml):"/>
+		<Res id="Out File Name:" tr="Out File Name:"/>
+		<Res id="Status:" tr="Status:"/>
+		<Res id="PLSVC_EnterFN" tr="Path to a MATPOWER .m case file (case9/case30/case118/case300)"/>
+		<Res id="Info" tr="Info"/>
+		<Res id="Convert" tr="Convert"/>
+		<Res id="openMatpowerCase" tr="Open MATPOWER case"/>
+		<Res id="openSvcConfig" tr="Open SVC config"/>
+		<Res id="createDmodl" tr="Create dmodl"/>
+
+		<Res id="Override Header/solver options below (otherwise use the XML config values):" tr="Override Header/solver options below (otherwise use the XML config values):"/>
+		<Res id="Max iterations:" tr="Max iterations:"/>
+		<Res id="dTime [s]:" tr="dTime [s]:"/>
+		<Res id="End time [s]:" tr="End time [s]:"/>
+		<Res id="Seed initial angles from a sparse DC power-flow solve (natID sparse solver)" tr="Seed initial angles from a sparse DC power-flow solve (natID sparse solver)"/>
+		<Res id="SVC_Options_Help" tr="These options apply on top of whatever the selected SVC config XML file specifies.&#10;The SVC bus/type assignment (which bus is SVC Type I, SVC Type II or standard) always comes from the XML config file itself, on the Converter tab."/>
+	</Translations>
+</DevRes>

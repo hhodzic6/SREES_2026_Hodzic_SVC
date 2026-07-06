@@ -1,0 +1,210 @@
+Header:
+	maxIter = 100	//Maximum number of iterations for NL, WLS, and DAE problems
+	report = AllDetails	//Solved/unsolved cases with iterations and debug information
+	maxReps = -1	//Used to limit repetitions (-1: no limit)
+	outToTxt = false
+	txtFile = ""
+	startTime = 0.000000
+	dTime = 0.010000
+	endTime = 10.000000
+end
+//Model created by the SVC (Static Var Compensator Type I/II) dTwin plugin converter
+
+Model [type=DAE domain=real method=RK2 name="SVC dynamic model for case9.m"]:
+
+Vars [out=true]:
+	e_1 = 1.04000000; f_1 = 0.00000000;
+	e_2 = 1.00867494; f_2 = -0.18220830;
+	e_3 = 1.02034701; f_3 = -0.09755496;
+	e_4 = 0.99924029; f_4 = 0.03897227;
+	e_5 = 0.99778135; f_5 = 0.06657616;
+	vM_5 = 1.00000000; sigma_5 = 0.0;
+	e_6 = 0.99896461; f_6 = -0.04549414;
+	e_7 = 0.99977183; f_7 = -0.02136104;
+	e_8 = 0.99704934; f_8 = -0.07676340;
+	e_9 = 0.99743033; f_9 = 0.07164308;
+	bSvc_9 = 0.0;
+
+Params:
+	// Node 1 - Slack
+	e_1_spec = 1.04000000; f_1_spec = 0.00000000;
+	// Node 2 - PV
+	P_2_inj_spec = 1.63000000; v_2_spec = 1.02500000;
+	Q_2_inj_spec = 0.06540000; Q_2_min = -3.00000000; Q_2_max = 3.00000000;
+	cGen2Reg = true [type=bool out=true];
+	// Node 3 - PV
+	P_3_inj_spec = 0.85000000; v_3_spec = 1.02500000;
+	Q_3_inj_spec = -0.10950000; Q_3_min = -3.00000000; Q_3_max = 3.00000000;
+	cGen3Reg = true [type=bool out=true];
+	// Node 4 - PQ
+	P_4_inj_spec = 0.00000000; Q_4_inj_spec = 0.00000000;
+	// Node 5 - SVC Type I
+	P_5_load = 0.90000000; Q_5_load = 0.30000000;
+	P_5_inj_spec = -0.90000000;
+	vref_5 = 1.02000000 [out=true];
+	K_5 = 10.00000000; KD_5 = 0.00000000; KM_5 = 1.00000000;
+	T1_5 = 0.05000000; T2_5 = 0.01000000; TM_5 = 0.01000000;
+	xL_5 = 0.10000000; xC_5 = 0.10000000;
+	sigmaMax_5 = 3.14159000; sigmaMin_5 = -3.14159000;
+	cSigma5Free = true [type=bool out=true];
+	// Node 6 - PQ
+	P_6_inj_spec = 0.00000000; Q_6_inj_spec = 0.00000000;
+	// Node 7 - PQ
+	P_7_inj_spec = -1.00000000; Q_7_inj_spec = -0.35000000;
+	// Node 8 - PQ
+	P_8_inj_spec = 0.00000000; Q_8_inj_spec = 0.00000000;
+	// Node 9 - SVC Type II
+	P_9_load = 1.25000000; Q_9_load = 0.50000000;
+	P_9_inj_spec = -1.25000000;
+	vref_9 = 1.00000000 [out=true];
+	Kr_9 = 10.00000000; Tr_9 = 0.05000000;
+	bMax_9 = 0.20000000; bMin_9 = -0.05000000;
+	cB9Free = true [type=bool out=true];
+
+	// Y-bus matrix (G + jB), built with natID's sparse assembly (see YBusBuilder)
+	G_1_1=0.0000000000; B_1_1=-17.3611111111;
+	G_1_4=0.0000000000; B_1_4=17.3611111111;
+	G_2_2=0.0000000000; B_2_2=-16.0000000000;
+	G_2_8=0.0000000000; B_2_8=16.0000000000;
+	G_3_3=0.0000000000; B_3_3=-17.0648464164;
+	G_3_6=0.0000000000; B_3_6=17.0648464164;
+	G_4_1=0.0000000000; B_4_1=17.3611111111;
+	G_4_4=3.3073789620; B_4_4=-39.3088887261;
+	G_4_5=-1.9421912487; B_4_5=10.5106820519;
+	G_4_9=-1.3651877133; B_4_9=11.6040955631;
+	G_5_4=-1.9421912487; B_5_4=10.5106820519;
+	G_5_5=3.2242003871; B_5_5=-15.8409270142;
+	G_5_6=-1.2820091384; B_5_6=5.5882449624;
+	G_6_3=0.0000000000; B_6_3=17.0648464164;
+	G_6_5=-1.2820091384; B_6_5=5.5882449624;
+	G_6_6=2.4370966193; B_6_6=-32.1538618051;
+	G_6_7=-1.1550874809; B_6_7=9.7842704264;
+	G_7_6=-1.1550874809; B_7_6=9.7842704264;
+	G_7_7=2.7722099541; B_7_7=-23.3032490233;
+	G_7_8=-1.6171224732; B_7_8=13.6979785969;
+	G_8_2=0.0000000000; B_8_2=16.0000000000;
+	G_8_7=-1.6171224732; B_8_7=13.6979785969;
+	G_8_8=2.8047268525; B_8_8=-35.4456131302;
+	G_8_9=-1.1876043793; B_8_9=5.9751345333;
+	G_9_4=-1.3651877133; B_9_4=11.6040955631;
+	G_9_8=-1.1876043793; B_9_8=5.9751345333;
+	G_9_9=2.5527920926; B_9_9=-17.3382300964;
+
+ODEs:
+	// SVC Type I dynamics on bus 5 (Milano eq. 19.3)
+	vM_5' = (KM_5*sqrt(e_5*e_5+f_5*f_5) - vM_5)/TM_5
+	if cSigma5Free:
+		sigma_5' = -KD_5 + K_5*T1_5/(T2_5*TM_5)*(vM_5 - KM_5*sqrt(e_5*e_5+f_5*f_5)) + K_5/T2_5*(vref_5 - vM_5)
+	else:
+		sigma_5' = 0
+	end
+	// SVC Type II dynamics on bus 9 (Milano eq. 19.4)
+	if cB9Free:
+		bSvc_9' = (Kr_9*(vref_9 - sqrt(e_9*e_9+f_9*f_9)) - bSvc_9)/Tr_9
+	else:
+		bSvc_9' = 0
+	end
+
+NLEs:
+	// Node 1 - Slack
+	e_1 - e_1_spec = 0
+	f_1 - f_1_spec = 0
+	// Node 2 - PV
+	(e_2*(G_2_2*e_2 - B_2_2*f_2) + f_2*(G_2_2*f_2 + B_2_2*e_2)) + (e_2*(G_2_8*e_8 - B_2_8*f_8) + f_2*(G_2_8*f_8 + B_2_8*e_8)) - P_2_inj_spec = 0
+	if cGen2Reg:
+		e_2*e_2 + f_2*f_2 - v_2_spec*v_2_spec = 0
+	else:
+		(f_2*(G_2_2*e_2 - B_2_2*f_2) - e_2*(G_2_2*f_2 + B_2_2*e_2)) + (f_2*(G_2_8*e_8 - B_2_8*f_8) - e_2*(G_2_8*f_8 + B_2_8*e_8)) - Q_2_inj_spec = 0
+	end
+	// Node 3 - PV
+	(e_3*(G_3_3*e_3 - B_3_3*f_3) + f_3*(G_3_3*f_3 + B_3_3*e_3)) + (e_3*(G_3_6*e_6 - B_3_6*f_6) + f_3*(G_3_6*f_6 + B_3_6*e_6)) - P_3_inj_spec = 0
+	if cGen3Reg:
+		e_3*e_3 + f_3*f_3 - v_3_spec*v_3_spec = 0
+	else:
+		(f_3*(G_3_3*e_3 - B_3_3*f_3) - e_3*(G_3_3*f_3 + B_3_3*e_3)) + (f_3*(G_3_6*e_6 - B_3_6*f_6) - e_3*(G_3_6*f_6 + B_3_6*e_6)) - Q_3_inj_spec = 0
+	end
+	// Node 4 - PQ
+	(e_4*(G_4_1*e_1 - B_4_1*f_1) + f_4*(G_4_1*f_1 + B_4_1*e_1)) + (e_4*(G_4_4*e_4 - B_4_4*f_4) + f_4*(G_4_4*f_4 + B_4_4*e_4)) + (e_4*(G_4_5*e_5 - B_4_5*f_5) + f_4*(G_4_5*f_5 + B_4_5*e_5)) + (e_4*(G_4_9*e_9 - B_4_9*f_9) + f_4*(G_4_9*f_9 + B_4_9*e_9)) - P_4_inj_spec = 0
+	(f_4*(G_4_1*e_1 - B_4_1*f_1) - e_4*(G_4_1*f_1 + B_4_1*e_1)) + (f_4*(G_4_4*e_4 - B_4_4*f_4) - e_4*(G_4_4*f_4 + B_4_4*e_4)) + (f_4*(G_4_5*e_5 - B_4_5*f_5) - e_4*(G_4_5*f_5 + B_4_5*e_5)) + (f_4*(G_4_9*e_9 - B_4_9*f_9) - e_4*(G_4_9*f_9 + B_4_9*e_9)) - Q_4_inj_spec = 0
+	// Node 5 - SVC Type I
+	(e_5*(G_5_4*e_4 - B_5_4*f_4) + f_5*(G_5_4*f_4 + B_5_4*e_4)) + (e_5*(G_5_5*e_5 - B_5_5*f_5) + f_5*(G_5_5*f_5 + B_5_5*e_5)) + (e_5*(G_5_6*e_6 - B_5_6*f_6) + f_5*(G_5_6*f_6 + B_5_6*e_6)) - P_5_inj_spec = 0
+	(f_5*(G_5_4*e_4 - B_5_4*f_4) - e_5*(G_5_4*f_4 + B_5_4*e_4)) + (f_5*(G_5_5*e_5 - B_5_5*f_5) - e_5*(G_5_5*f_5 + B_5_5*e_5)) + (f_5*(G_5_6*e_6 - B_5_6*f_6) - e_5*(G_5_6*f_6 + B_5_6*e_6)) - ((3.14159265358979*xL_5/xC_5 - 2*3.14159265358979 + 2*sigma_5 - sin(2*sigma_5)) / (3.14159265358979*xL_5))*(e_5*e_5+f_5*f_5) + Q_5_load = 0
+	// Node 6 - PQ
+	(e_6*(G_6_3*e_3 - B_6_3*f_3) + f_6*(G_6_3*f_3 + B_6_3*e_3)) + (e_6*(G_6_5*e_5 - B_6_5*f_5) + f_6*(G_6_5*f_5 + B_6_5*e_5)) + (e_6*(G_6_6*e_6 - B_6_6*f_6) + f_6*(G_6_6*f_6 + B_6_6*e_6)) + (e_6*(G_6_7*e_7 - B_6_7*f_7) + f_6*(G_6_7*f_7 + B_6_7*e_7)) - P_6_inj_spec = 0
+	(f_6*(G_6_3*e_3 - B_6_3*f_3) - e_6*(G_6_3*f_3 + B_6_3*e_3)) + (f_6*(G_6_5*e_5 - B_6_5*f_5) - e_6*(G_6_5*f_5 + B_6_5*e_5)) + (f_6*(G_6_6*e_6 - B_6_6*f_6) - e_6*(G_6_6*f_6 + B_6_6*e_6)) + (f_6*(G_6_7*e_7 - B_6_7*f_7) - e_6*(G_6_7*f_7 + B_6_7*e_7)) - Q_6_inj_spec = 0
+	// Node 7 - PQ
+	(e_7*(G_7_6*e_6 - B_7_6*f_6) + f_7*(G_7_6*f_6 + B_7_6*e_6)) + (e_7*(G_7_7*e_7 - B_7_7*f_7) + f_7*(G_7_7*f_7 + B_7_7*e_7)) + (e_7*(G_7_8*e_8 - B_7_8*f_8) + f_7*(G_7_8*f_8 + B_7_8*e_8)) - P_7_inj_spec = 0
+	(f_7*(G_7_6*e_6 - B_7_6*f_6) - e_7*(G_7_6*f_6 + B_7_6*e_6)) + (f_7*(G_7_7*e_7 - B_7_7*f_7) - e_7*(G_7_7*f_7 + B_7_7*e_7)) + (f_7*(G_7_8*e_8 - B_7_8*f_8) - e_7*(G_7_8*f_8 + B_7_8*e_8)) - Q_7_inj_spec = 0
+	// Node 8 - PQ
+	(e_8*(G_8_2*e_2 - B_8_2*f_2) + f_8*(G_8_2*f_2 + B_8_2*e_2)) + (e_8*(G_8_7*e_7 - B_8_7*f_7) + f_8*(G_8_7*f_7 + B_8_7*e_7)) + (e_8*(G_8_8*e_8 - B_8_8*f_8) + f_8*(G_8_8*f_8 + B_8_8*e_8)) + (e_8*(G_8_9*e_9 - B_8_9*f_9) + f_8*(G_8_9*f_9 + B_8_9*e_9)) - P_8_inj_spec = 0
+	(f_8*(G_8_2*e_2 - B_8_2*f_2) - e_8*(G_8_2*f_2 + B_8_2*e_2)) + (f_8*(G_8_7*e_7 - B_8_7*f_7) - e_8*(G_8_7*f_7 + B_8_7*e_7)) + (f_8*(G_8_8*e_8 - B_8_8*f_8) - e_8*(G_8_8*f_8 + B_8_8*e_8)) + (f_8*(G_8_9*e_9 - B_8_9*f_9) - e_8*(G_8_9*f_9 + B_8_9*e_9)) - Q_8_inj_spec = 0
+	// Node 9 - SVC Type II
+	(e_9*(G_9_4*e_4 - B_9_4*f_4) + f_9*(G_9_4*f_4 + B_9_4*e_4)) + (e_9*(G_9_8*e_8 - B_9_8*f_8) + f_9*(G_9_8*f_8 + B_9_8*e_8)) + (e_9*(G_9_9*e_9 - B_9_9*f_9) + f_9*(G_9_9*f_9 + B_9_9*e_9)) - P_9_inj_spec = 0
+	(f_9*(G_9_4*e_4 - B_9_4*f_4) - e_9*(G_9_4*f_4 + B_9_4*e_4)) + (f_9*(G_9_8*e_8 - B_9_8*f_8) - e_9*(G_9_8*f_8 + B_9_8*e_8)) + (f_9*(G_9_9*e_9 - B_9_9*f_9) - e_9*(G_9_9*f_9 + B_9_9*e_9)) - bSvc_9*(e_9*e_9+f_9*f_9) + Q_9_load = 0
+
+Limits:
+	group [name="svcLimits" enabled=true]:
+		// PV generator Q-limit switching on bus 2
+		if cGen2Reg:
+			(f_2*(G_2_2*e_2 - B_2_2*f_2) - e_2*(G_2_2*f_2 + B_2_2*e_2)) + (f_2*(G_2_8*e_8 - B_2_8*f_8) - e_2*(G_2_8*f_8 + B_2_8*e_8)) = Q_2_inj_spec
+			if Q_2_inj_spec <= Q_2_min [signal=TooLow]:
+				cGen2Reg = false
+				Q_2_inj_spec = Q_2_min
+			else:
+				if Q_2_inj_spec >= Q_2_max [signal=TooHigh]:
+					cGen2Reg = false
+					Q_2_inj_spec = Q_2_max
+				end
+			end
+		end
+		// PV generator Q-limit switching on bus 3
+		if cGen3Reg:
+			(f_3*(G_3_3*e_3 - B_3_3*f_3) - e_3*(G_3_3*f_3 + B_3_3*e_3)) + (f_3*(G_3_6*e_6 - B_3_6*f_6) - e_3*(G_3_6*f_6 + B_3_6*e_6)) = Q_3_inj_spec
+			if Q_3_inj_spec <= Q_3_min [signal=TooLow]:
+				cGen3Reg = false
+				Q_3_inj_spec = Q_3_min
+			else:
+				if Q_3_inj_spec >= Q_3_max [signal=TooHigh]:
+					cGen3Reg = false
+					Q_3_inj_spec = Q_3_max
+				end
+			end
+		end
+		// SVC Type I anti-windup limiter on firing angle sigma, bus 5
+		if cSigma5Free:
+			if sigma_5 <= sigmaMin_5 [signal=TooLow]:
+				cSigma5Free = false
+				sigma_5 = sigmaMin_5
+			else:
+				if sigma_5 >= sigmaMax_5 [signal=TooHigh]:
+					cSigma5Free = false
+					sigma_5 = sigmaMax_5
+				end
+			end
+		else:
+			cSigma5Free = true
+		end
+		// SVC Type II anti-windup limiter on susceptance bSvc, bus 9
+		if cB9Free:
+			if bSvc_9 <= bMin_9 [signal=TooLow]:
+				cB9Free = false
+				bSvc_9 = bMin_9
+			else:
+				if bSvc_9 >= bMax_9 [signal=TooHigh]:
+					cB9Free = false
+					bSvc_9 = bMax_9
+				end
+			end
+		else:
+			cB9Free = true
+		end
+	end
+
+PostProc:
+	vh_5 = sqrt(e_5*e_5+f_5*f_5)	[out=true]
+	bEff_5 = ((3.14159265358979*xL_5/xC_5 - 2*3.14159265358979 + 2*sigma_5 - sin(2*sigma_5)) / (3.14159265358979*xL_5))	[out=true]
+	q_5 = bEff_5*(e_5*e_5+f_5*f_5)	[out=true]
+	vh_9 = sqrt(e_9*e_9+f_9*f_9)	[out=true]
+	q_9 = bSvc_9*(e_9*e_9+f_9*f_9)	[out=true]
+
+end

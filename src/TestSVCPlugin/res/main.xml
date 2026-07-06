@@ -1,0 +1,6 @@
+<?xml version='1.0'?>
+<DevRes>
+	<Images>
+		<Res id="imgOpen" path="Common/Icons/openSave/open64.png"/>
+	</Images>
+</DevRes>

@@ -1,0 +1,17 @@
+# CMake build directories
+build/
+out/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+
+# LaTeX build artifacts
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+
+# OS junk
+.DS_Store
+Thumbs.db

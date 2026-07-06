@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	SVC converter configuration file.
+	Every MATPOWER bus NOT listed under <SVCNodes> keeps its original
+	static model (Slack / PV / PQ), exactly as it is defined in the .m case file.
+	Every bus listed under <SVCNodes> has its static model REPLACED by
+	the dynamic SVC Type I (firing-angle) or SVC Type II (susceptance)
+	model from Milano, "Power System Modelling and Scripting", Ch. 19.1.
+-->
+<SVCConverterConfig>
+
+	<Files>
+		<InputFile path="case9.m"/>
+		<OutputFile name="case9_svc" directory="./output/"/>
+	</Files>
+
+	<!-- Header section of the generated .dmodl -->
+	<Simulation>
+		<maxIter>100</maxIter>
+		<report>AllDetails</report>
+		<maxReps>-1</maxReps>
+		<startTime>0</startTime>
+		<dTime>0.01</dTime>
+		<endTime>10</endTime>
+		<method>RK2</method>
+	</Simulation>
+
+	<Options>
+		<!-- comments like "// Node 5 (PQ bus)" above generated equations -->
+		<EnableNLEComments>true</EnableNLEComments>
+		<!-- allow PV generators (buses not converted to SVC) to switch to PQ on Q-limit violation -->
+		<GeneratorLimits>true</GeneratorLimits>
+		<!-- initialize e_i/f_i from a DC power-flow angle estimate (sparse solve) instead of flat start -->
+		<UseDCAngleInit>true</UseDCAngleInit>
+	</Options>
+
+	<!-- Defaults used whenever a <Node> below omits an attribute (Milano, Tables D.10/D.11) -->
+	<DefaultsSVCTypeI  K="10.0" KD="0.0" KM="1.0" T1="0.05" T2="0.01" TM="0.01" xL="0.1" xC="0.1" sigmaMax="3.14159" sigmaMin="-3.14159"/>
+	<DefaultsSVCTypeII Kr="10.0" Tr="0.05" bMax="0.20" bMin="-0.05"/>
+
+	<SVCNodes>
+		<!-- bus = MATPOWER bus number; vref optional (pu) - defaults to that bus's Vm from the .m file -->
+		<Node bus="5" type="SVCTypeI"  vref="1.02"/>
+		<Node bus="9" type="SVCTypeII" vref="1.00"/>
+	</SVCNodes>
+
+</SVCConverterConfig>

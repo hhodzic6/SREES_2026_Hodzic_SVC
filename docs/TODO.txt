@@ -1,0 +1,18 @@
+izvjestaj.tex / izvjestaj.pdf - LaTeX izvjestaj (kompajlirano i provjereno lokalno sa
+MiKTeX-om, radi i na Overleaf-u bez izmjena, svi dijagrami su TikZ - nema potrebe za
+OpenDraw/eksternim slikama).
+
+Sto JOS TREBAS dopuniti prije predaje (oznaceno "TODO" kutijicama i unutar samog PDF-a):
+  - Poglavlje 6.3 "Rezultati simulacije" - pravi grafici/zapazanja nakon sto pokrenes
+    generisani .dmodl unutar dTwin-a (ja to nisam mogao vizuelno testirati - vidi
+    PROGRESS_NOTES.txt za objasnjenje).
+  - Poglavlje 4.3 Listing 4.1 - zamijeniti/dopuniti stvarnim isjeckom generisanog .dmodl
+    fajla (vec je tacan primjer generisan iz koda, ali provjeri da odgovara stvarnom
+    outputu nakon build-a).
+  - Zakljucak - konkretna zapazanja nakon testiranja.
+
+Kako kompajlirati:
+  - Overleaf: upload izvjestaj.tex (nema drugih fajlova/slika potrebnih), kompajliraj sa
+    pdfLaTeX.
+  - Lokalno (MiKTeX/TeX Live): pdflatex izvjestaj.tex (pokrenuti 2-3 puta zaredom da se
+    reference/sadrzaj tacno slozi).

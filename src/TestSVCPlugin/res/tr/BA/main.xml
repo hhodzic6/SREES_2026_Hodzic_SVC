@@ -1,0 +1,12 @@
+<?xml version='1.0'?>
+<DevRes>
+	<Translations>
+		<Res id="appTitle" tr="Test SVC Plugin - domaćin aplikacija"/>
+		<Res id="Quit" tr="Izlaz"/>
+		<Res id="open" tr="Otvori"/>
+		<Res id="openTT" tr="Učitaj SVC konvertor plugin (svcConv)"/>
+		<Res id="Name:" tr="Naziv:"/>
+		<Res id="Location:" tr="Lokacija:"/>
+		<Res id="Visual model:" tr="Vizuelni model:"/>
+	</Translations>
+</DevRes>
