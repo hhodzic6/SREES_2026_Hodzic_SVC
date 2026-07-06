@@ -17,6 +17,24 @@ KOMPAJLIRAO I POKRENUO cijeli projekat - vidi novo poglavlje "0) STVARNA VERIFIK
 BUILD-A" ispod za kompletnu priču (4 pronađene i ispravljene greške, 2 u mom kodu, 2
 nedostajuća SDK zaglavlja rekonstruisana uz odobrenje korisnika).
 
+AŽURIRANO 2026-07-06 (još kasnije): korisnik je otvorio pravi dTwin i pokušao učitati
+generisani case9_svc.dmodl preko "Open" - dTwin se SRUŠIO (crash, Windows Error
+Reporting exception 0xc0000409 u ucrtbase.dll, WER bucket "BEX64" - klasičan potpis
+neuhvaćenog C++ exception-a). Pronašao sam pravi, ugrađeni radni DAE primjer
+(natID.Examples/A_Selected/DigitTwinTest/res/models/PendulumDAE.dmodl) i uporedio ga
+sa mojim generisanim fajlom - KLJUČNA RAZLIKA: taj referentni fajl NEMA nikakvu
+"Limits:" sekciju niti if/else/[signal=...] uslovnu logiku bilo gdje (Vars, Params,
+ODEs, NLEs, PostProc - samo to, bez grananja). Moja "Limits:" sekcija (anti-windup za
+sigma/bSvc, Q-limit switching za PV generatore) je bila u potpunosti bazirana na
+amina-inom STATIČKOM (NL-tip) primjeru koji NIKAD nije nezavisno potvrđen da radi u
+pravom dTwin-u. Uklonio sam CIJELU "Limits:" sekciju i svu if/else uslovnu logiku iz
+DmodlWriter.cpp (SVC anti-windup i PV Q-limit-switching sada rade BEZ uslovnog
+grananja - SVC stanja se integrisu bez tvrdog ograničavanja, PV busevi uvijek striktno
+regulišu napon bez prebacivanja na Q-limit). Ovo je namjerno pojednostavljenje da bi
+se PRIORITETNO dobio fajl koji se uopšte može učitati - vidi poglavlje "0b" ispod za
+detalje i šta bi trebalo probati vratiti nazad kasnije kad se potvrdi ispravna sintaksa
+za uslovno grananje u dTwin DSL-u.
+
 ================================================================================
 0) STVARNA VERIFIKACIJA BUILD-A (2026-07-06, kasnije istog dana)
 ================================================================================
@@ -88,6 +106,77 @@ Rezultat:
     da se vidi da li SVC Type I/II dinamika ima očekivano ponašanje.
   - Ako testSvcPlugin.exe treba da radi samostalno (van pune dTwin app), istraži
     "-devResPath" argument ili zašto ne pronalazi res/ folder u Release build-u.
+
+================================================================================
+0b) CRASH U DTWIN-U PRI OTVARANJU .DMODL FAJLA - UZROK I ISPRAVKA
+================================================================================
+Simptom: korisnik otvori dTwin, klikne "Open", odabere generisani case9_svc.dmodl,
+dTwin se odmah ugasi (crash). Windows Event Log (Application Error + Windows Error
+Reporting) je pokazao:
+    Exception code: 0xc0000409  (STATUS_STACK_BUFFER_OVERRUN / __fastfail)
+    Faulting module: ucrtbase.dll
+    WER bucket type: BEX64
+Ovo je poznat "potpis" za NEUHVAĆEN C++ exception koji izazove terminate()/abort() -
+znači dTwin-ov DAE/DSL parser je vjerovatno naišao na nešto u mom generisanom fajlu
+što nije očekivao i bacio exception koji niko nije uhvatio (cijela aplikacija padne,
+ne samo "greška u dijalogu").
+
+Dijagnoza: pronašao sam PRAVI, ugrađeni radni primjer DAE modela u SDK-u:
+    natID.Examples/A_Selected/DigitTwinTest/res/models/PendulumDAE.dmodl
+Ovo je jedini fajl za koji mogu biti SIGURAN da je ispravna dTwin DAE sintaksa (dio je
+same SDK distribucije, ne generisan od strane bilo koga od nas). Njegova struktura:
+    Header: (startTime,dTime,endTime,maxIter,report) end
+    Model[type=DAE ...]:
+    Vars [out=true]: ...
+    Params: ...
+    ODEs: ...
+    NLEs: ...
+    PostProc: ...
+    end
+KLJUČNO: NEMA "Limits:" sekcije, NEMA if/else/[signal=...] uslovnog grananja BILO GDJE
+u ovom fajlu. Moja "Limits:" sekcija (anti-windup limiter za SVC sigma/bSvc stanja, i
+Q-limit switching za PV generatore) je bila u potpunosti izvedena iz amina-inog
+STATIČKOG (NL-tip, ne DAE) Python-generisanog primjera, koji NIKAD nije nezavisno
+potvrđen da zaista radi u pravom dTwin-u (njen projekat, koliko sam mogao ustanoviti,
+nikad nije ni pokušao koristiti natID GUI/plugin arhitekturu - vidi odjeljak 1 ispod -
+pa je vrlo moguće da ni njena "Limits:"/if-else sintaksa nikad nije bila testirana
+protiv pravog dTwin parsera).
+
+Ispravka (primijenjena u src/SVCPlugin/src/DmodlWriter.cpp i .h):
+  - Uklonjena cijela writeLimits() funkcija i njen poziv iz writeDmodl().
+  - Uklonjeno if/else grananje iz ODEs (SVC Type I sigma'/vM', SVC Type II bSvc' se
+    sada uvijek integrišu bez tvrdog anti-windup ograničenja - cSigmaXFree/cBXFree
+    bool zastavice i njihova [type=bool out=true] deklaracija u Params su uklonjene).
+  - Uklonjeno if/else grananje iz NLEs (PV generator na busu sada UVIJEK striktno
+    regulira napon e^2+f^2=v_spec^2, bez prebacivanja na Q-limit kad se dostigne
+    granica reaktivne snage generatora - cGenXReg zastavica i Q_min/Q_max/Q_inj_spec
+    parametri za PV buseve su uklonjeni pošto više nisu potrebni).
+  - sigmaMax_X/sigmaMin_X i bMax_X/bMin_X parametri i dalje se deklarišu (korisno kao
+    dokumentacija/za buduće ponovno uvođenje ograničenja), samo se više NIGDJE ne
+    koriste u jednačinama.
+Rezultat: case9_svc.dmodl je ponovo generisan (CLI test, uspješno, 7362 bajta) i sada
+IMA TAČNO ISTU STRUKTURU SEKCIJA kao potvrđeno-ispravan PendulumDAE.dmodl primjer (samo
+Header/Vars/Params/ODEs/NLEs/PostProc, bez Limits, bez if/else).
+
+STA TREBA URADITI DALJE (nisam mogao sam testirati - nemam pristup dTwin GUI-u):
+  1. Prvo testirati da li dTwin uopšte može otvoriti POZNATO ISPRAVAN fajl bez pada:
+     probaj otvoriti C:\Users\User\Desktop\PendulumDAE_TEST.dmodl (kopija SDK primjera).
+     Ako se OVO sruši, problem nije u mom generisanom sadržaju nego negdje drugo
+     (možda dTwin instalacija, možda "Open" dijalog treba drugačiji fajl format/putanju).
+  2. Ako Pendulum radi, probaj novi C:\Users\User\Desktop\case9_svc.dmodl (regenerisan
+     bez Limits/if-else sekcija).
+  3. Ako I OVAJ i dalje pada, sljedeći sumnjivi kandidati (obrnutim redoslijedom
+     rizika): (a) tačan format brojeva (npr. da li dTwin parser prihvata i.8f
+     preciznost i eksponencijalni oblik kao "3.14159265358979" - Pendulum primjer ima
+     kraće brojeve poput "9.81", "1e-3"), (b) upotreba tačka-zareza (;) kao
+     separatora u Vars/Params (Pendulum NEMA nijedan ";" nigdje - moj fajl i dalje ih
+     koristi obilato), (c) `[out=true]` atribut na POJEDINAČNOM parametru u sred
+     Params sekcije (`vref_5 = 1.02 [out=true];` - Pendulum ima sličan obrazac
+     `v=0 [out=true]` pa je ovo vjerovatno OK, ali provjeriti ako i dalje puca).
+  4. Ako se dogodi crash, PRVO provjeriti Windows Event Viewer (Applications and
+     Services Logs > Application, traži "Application Error"/"Windows Error
+     Reporting" oko vremena pada) - exception code i faulting module mogu dati novi
+     trag.
 
 ================================================================================
 1) ŠTA JE PROČITANO / ISTRAŽENO PRIJE PISANJA KODA

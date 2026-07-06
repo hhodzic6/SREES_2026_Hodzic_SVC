@@ -27,7 +27,6 @@ protected:
     void writeParams(td::MutableString& out) const;
     void writeODEs(td::MutableString& out) const;
     void writeNLEs(td::MutableString& out, const std::function<void(double)>& progressCb) const;
-    void writeLimits(td::MutableString& out) const;
     void writePostProc(td::MutableString& out) const;
 
 public:

@@ -126,7 +126,6 @@ void DmodlWriter::writeParams(td::MutableString& out) const
     auto genM = _case.getGen().getManipulator();
     auto nGen = _case.getNoOfGens();
     double baseMVA = _case.getBaseMVA();
-    bool genLimits = _config.getOptions().generatorLimits;
 
     for (td::UINT4 row = 0; row < nBus; ++row)
     {
@@ -151,22 +150,19 @@ void DmodlWriter::writeParams(td::MutableString& out) const
                     "\tK_%u = %.8f; KD_%u = %.8f; KM_%u = %.8f;\n"
                     "\tT1_%u = %.8f; T2_%u = %.8f; TM_%u = %.8f;\n"
                     "\txL_%u = %.8f; xC_%u = %.8f;\n"
-                    "\tsigmaMax_%u = %.8f; sigmaMin_%u = %.8f;\n"
-                    "\tcSigma%uFree = true [type=bool out=true];\n",
+                    "\tsigmaMax_%u = %.8f; sigmaMin_%u = %.8f;\n",
                     num, p.K, num, p.KD, num, p.KM,
                     num, p.T1, num, p.T2, num, p.TM,
                     num, p.xL, num, p.xC,
-                    num, p.sigmaMax, num, p.sigmaMin,
-                    num);
+                    num, p.sigmaMax, num, p.sigmaMin);
             }
             else
             {
                 const auto& p = pSvc->typeII;
                 out.appendFormat(
                     "\tKr_%u = %.8f; Tr_%u = %.8f;\n"
-                    "\tbMax_%u = %.8f; bMin_%u = %.8f;\n"
-                    "\tcB%uFree = true [type=bool out=true];\n",
-                    num, p.Kr, num, p.Tr, num, p.bMax, num, p.bMin, num);
+                    "\tbMax_%u = %.8f; bMin_%u = %.8f;\n",
+                    num, p.Kr, num, p.Tr, num, p.bMax, num, p.bMin);
             }
         }
         else
@@ -181,7 +177,7 @@ void DmodlWriter::writeParams(td::MutableString& out) const
             }
             else if (type == BusType::PV)
             {
-                double pGen = 0.0, qGen = 0.0, qMin = -9999.0, qMax = 9999.0, vg = vm0;
+                double pGen = 0.0, vg = vm0;
                 for (td::UINT4 g = 0; g < nGen; ++g)
                 {
                     if (genM(g, genCol::status) <= 0.0)
@@ -189,19 +185,10 @@ void DmodlWriter::writeParams(td::MutableString& out) const
                     if (td::UINT4(genM(g, genCol::bus)) != num)
                         continue;
                     pGen += genM(g, genCol::Pg);
-                    qGen += genM(g, genCol::Qg);
-                    qMin = genM(g, genCol::Qmin);
-                    qMax = genM(g, genCol::Qmax);
                     vg = genM(g, genCol::Vg);
                 }
                 out.appendFormat("\t// Node %u - PV\n", num);
                 out.appendFormat("\tP_%u_inj_spec = %.8f; v_%u_spec = %.8f;\n", num, (pGen - busM(row, busCol::Pd)) / baseMVA, num, vg);
-                if (genLimits)
-                {
-                    out.appendFormat("\tQ_%u_inj_spec = %.8f; Q_%u_min = %.8f; Q_%u_max = %.8f;\n",
-                        num, (qGen - busM(row, busCol::Qd)) / baseMVA, num, qMin / baseMVA, num, qMax / baseMVA);
-                    out.appendFormat("\tcGen%uReg = true [type=bool out=true];\n", num);
-                }
             }
             else // PQ (and isolated buses handled the same way; MATPOWER cases used here have none)
             {
@@ -253,21 +240,13 @@ void DmodlWriter::writeODEs(td::MutableString& out) const
         {
             out.appendFormat("\t// SVC Type I dynamics on bus %u (Milano eq. 19.3)\n", num);
             out.appendFormat("\tvM_%u' = (KM_%u*%s - vM_%u)/TM_%u\n", num, num, vh.c_str(), num, num);
-            out.appendFormat("\tif cSigma%uFree:\n", num);
-            out.appendFormat("\t\tsigma_%u' = -KD_%u + K_%u*T1_%u/(T2_%u*TM_%u)*(vM_%u - KM_%u*%s) + K_%u/T2_%u*(vref_%u - vM_%u)\n",
+            out.appendFormat("\tsigma_%u' = -KD_%u + K_%u*T1_%u/(T2_%u*TM_%u)*(vM_%u - KM_%u*%s) + K_%u/T2_%u*(vref_%u - vM_%u)\n",
                 num, num, num, num, num, num, num, num, vh.c_str(), num, num, num, num);
-            out.append("\telse:\n");
-            out.appendFormat("\t\tsigma_%u' = 0\n", num);
-            out.append("\tend\n");
         }
         else
         {
             out.appendFormat("\t// SVC Type II dynamics on bus %u (Milano eq. 19.4)\n", num);
-            out.appendFormat("\tif cB%uFree:\n", num);
-            out.appendFormat("\t\tbSvc_%u' = (Kr_%u*(vref_%u - %s) - bSvc_%u)/Tr_%u\n", num, num, num, vh.c_str(), num, num);
-            out.append("\telse:\n");
-            out.appendFormat("\t\tbSvc_%u' = 0\n", num);
-            out.append("\tend\n");
+            out.appendFormat("\tbSvc_%u' = (Kr_%u*(vref_%u - %s) - bSvc_%u)/Tr_%u\n", num, num, num, vh.c_str(), num, num);
         }
     }
 }
@@ -279,7 +258,6 @@ void DmodlWriter::writeNLEs(td::MutableString& out, const std::function<void(dou
     auto nBus = _case.getNoOfBuses();
     auto busM = _case.getBus().getManipulator();
     bool comments = _config.getOptions().enableNLEComments;
-    bool genLimits = _config.getOptions().generatorLimits;
 
     for (td::UINT4 row = 0; row < nBus; ++row)
     {
@@ -327,20 +305,7 @@ void DmodlWriter::writeNLEs(td::MutableString& out, const std::function<void(dou
                 out.append("\t");
                 appendInjectionSum(out, _case, rowEntries, true);
                 out.appendFormat(" - P_%u_inj_spec = 0\n", num);
-
-                if (genLimits)
-                {
-                    out.appendFormat("\tif cGen%uReg:\n", num);
-                    out.appendFormat("\t\te_%u*e_%u + f_%u*f_%u - v_%u_spec*v_%u_spec = 0\n", num, num, num, num, num, num);
-                    out.append("\telse:\n\t\t");
-                    appendInjectionSum(out, _case, rowEntries, false);
-                    out.appendFormat(" - Q_%u_inj_spec = 0\n", num);
-                    out.append("\tend\n");
-                }
-                else
-                {
-                    out.appendFormat("\te_%u*e_%u + f_%u*f_%u - v_%u_spec*v_%u_spec = 0\n", num, num, num, num, num, num);
-                }
+                out.appendFormat("\te_%u*e_%u + f_%u*f_%u - v_%u_spec*v_%u_spec = 0\n", num, num, num, num, num, num);
             }
             else // PQ
             {
@@ -357,79 +322,6 @@ void DmodlWriter::writeNLEs(td::MutableString& out, const std::function<void(dou
         if (progressCb && (nBus > 0))
             progressCb(double(row + 1) / double(nBus));
     }
-}
-
-void DmodlWriter::writeLimits(td::MutableString& out) const
-{
-    out.append("\nLimits:\n\tgroup [name=\"svcLimits\" enabled=true]:\n");
-
-    auto nBus = _case.getNoOfBuses();
-    auto busM = _case.getBus().getManipulator();
-    bool genLimits = _config.getOptions().generatorLimits;
-
-    for (td::UINT4 row = 0; row < nBus; ++row)
-    {
-        td::UINT4 num = busNumberOfRow(_case, row);
-        const SvcNodeConfig* pSvc = _config.findNode(num);
-
-        if (pSvc)
-        {
-            if (pSvc->type == SvcNodeType::SvcTypeI)
-            {
-                out.appendFormat("\t\t// SVC Type I anti-windup limiter on firing angle sigma, bus %u\n", num);
-                out.appendFormat("\t\tif cSigma%uFree:\n", num);
-                out.appendFormat("\t\t\tif sigma_%u <= sigmaMin_%u [signal=TooLow]:\n", num, num);
-                out.appendFormat("\t\t\t\tcSigma%uFree = false\n\t\t\t\tsigma_%u = sigmaMin_%u\n", num, num, num);
-                out.append("\t\t\telse:\n");
-                out.appendFormat("\t\t\t\tif sigma_%u >= sigmaMax_%u [signal=TooHigh]:\n", num, num);
-                out.appendFormat("\t\t\t\t\tcSigma%uFree = false\n\t\t\t\t\tsigma_%u = sigmaMax_%u\n", num, num, num);
-                out.append("\t\t\t\tend\n\t\t\tend\n");
-                out.append("\t\telse:\n");
-                out.appendFormat("\t\t\tcSigma%uFree = true\n", num);
-                out.append("\t\tend\n");
-            }
-            else
-            {
-                out.appendFormat("\t\t// SVC Type II anti-windup limiter on susceptance bSvc, bus %u\n", num);
-                out.appendFormat("\t\tif cB%uFree:\n", num);
-                out.appendFormat("\t\t\tif bSvc_%u <= bMin_%u [signal=TooLow]:\n", num, num);
-                out.appendFormat("\t\t\t\tcB%uFree = false\n\t\t\t\tbSvc_%u = bMin_%u\n", num, num, num);
-                out.append("\t\t\telse:\n");
-                out.appendFormat("\t\t\t\tif bSvc_%u >= bMax_%u [signal=TooHigh]:\n", num, num);
-                out.appendFormat("\t\t\t\t\tcB%uFree = false\n\t\t\t\t\tbSvc_%u = bMax_%u\n", num, num, num);
-                out.append("\t\t\t\tend\n\t\t\tend\n");
-                out.append("\t\telse:\n");
-                out.appendFormat("\t\t\tcB%uFree = true\n", num);
-                out.append("\t\tend\n");
-            }
-            continue;
-        }
-
-        if (!genLimits)
-            continue;
-
-        BusType type = BusType(int(busM(row, busCol::type)));
-        if (type != BusType::PV)
-            continue;
-
-        cnt::PushBackVector<const YBusEntry*> rowEntries;
-        rowEntries.reserve(8);
-        _ybus.getRowEntries(row, rowEntries);
-
-        out.appendFormat("\t\t// PV generator Q-limit switching on bus %u\n", num);
-        out.appendFormat("\t\tif cGen%uReg:\n\t\t\t", num);
-        appendInjectionSum(out, _case, rowEntries, false);
-        out.appendFormat(" = Q_%u_inj_spec\n", num);
-        out.appendFormat("\t\t\tif Q_%u_inj_spec <= Q_%u_min [signal=TooLow]:\n", num, num);
-        out.appendFormat("\t\t\t\tcGen%uReg = false\n\t\t\t\tQ_%u_inj_spec = Q_%u_min\n", num, num, num);
-        out.append("\t\t\telse:\n");
-        out.appendFormat("\t\t\t\tif Q_%u_inj_spec >= Q_%u_max [signal=TooHigh]:\n", num, num);
-        out.appendFormat("\t\t\t\t\tcGen%uReg = false\n\t\t\t\t\tQ_%u_inj_spec = Q_%u_max\n", num, num, num);
-        out.append("\t\t\t\tend\n\t\t\tend\n");
-        out.append("\t\tend\n");
-    }
-
-    out.append("\tend\n");
 }
 
 void DmodlWriter::writePostProc(td::MutableString& out) const
@@ -466,7 +358,6 @@ void DmodlWriter::writeDmodl(td::MutableString& out, const std::function<void(do
     writeParams(out);
     writeODEs(out);
     writeNLEs(out, progressCb);
-    writeLimits(out);
     writePostProc(out);
     out.append("\nend\n");
 }
