@@ -1,0 +1,343 @@
+Header:
+	maxIter = 100	//Maximum number of iterations for NL, WLS, and DAE problems
+	report = AllDetails	//Solved/unsolved cases with iterations and debug information
+	maxReps = -1	//Used to limit repetitions (-1: no limit)
+	outToTxt = false
+	txtFile = ""
+	startTime = 0.000000
+	dTime = 0.010000
+	endTime = 10.000000
+end
+//Model created by the SVC (Static Var Compensator Type I/II) dTwin plugin converter
+
+Model [type=DAE domain=real method=RK2 name="SVC dynamic model for case30.m"]:
+
+Vars [out=true]:
+	v_1 = 1.00000000; phi_1 = 0.00000000;
+	v_2 = 1.00000000; phi_2 = 0.00604215;
+	v_3 = 1.00000000; phi_3 = 0.03023947;
+	v_4 = 1.00000000; phi_4 = 0.03553262;
+	v_5 = 1.00000000; phi_5 = 0.03464112;
+	v_6 = 1.00000000; phi_6 = 0.04488598;
+	v_7 = 1.00000000; phi_7 = 0.05351249;
+	vM_7 = 1.00000000; sigma_7 = 0.0;
+	vh_7 = 1.00000000;
+	bEff_7 = 0.0; q_7 = 0.0;
+	v_8 = 1.00000000; phi_8 = 0.05540389;
+	bSvc_8 = 0.0;
+	vh_8 = 1.00000000;
+	q_8 = 0.0;
+	v_9 = 1.00000000; phi_9 = 0.05653433;
+	v_10 = 1.00000000; phi_10 = 0.06263585;
+	v_11 = 1.00000000; phi_11 = 0.05653433;
+	v_12 = 1.00000000; phi_12 = 0.03094839;
+	v_13 = 1.00000000; phi_13 = -0.02085161;
+	v_14 = 1.00000000; phi_14 = 0.04879180;
+	v_15 = 1.00000000; phi_15 = 0.04639468;
+	v_16 = 1.00000000; phi_16 = 0.05299763;
+	v_17 = 1.00000000; phi_17 = 0.06567623;
+	v_18 = 1.00000000; phi_18 = 0.07117219;
+	v_19 = 1.00000000; phi_19 = 0.08033412;
+	v_20 = 1.00000000; phi_20 = 0.07727670;
+	v_21 = 1.00000000; phi_21 = 0.06059868;
+	v_22 = 1.00000000; phi_22 = 0.05560901;
+	v_23 = 1.00000000; phi_23 = 0.02504156;
+	v_24 = 1.00000000; phi_24 = 0.04984882;
+	v_25 = 1.00000000; phi_25 = 0.03465148;
+	v_26 = 1.00000000; phi_26 = 0.05370806;
+	v_27 = 1.00000000; phi_27 = 0.01602867;
+	v_28 = 1.00000000; phi_28 = 0.04383385;
+	v_29 = 1.00000000; phi_29 = 0.04843399;
+	v_30 = 1.00000000; phi_30 = 0.06955628;
+
+Params:
+	// Node 1 - Slack
+	v_1_spec = 1.00000000; phi_1_spec = 0.00000000;
+	// Node 2 - PV
+	P_2_inj_spec = 0.39270000; v_2_spec = 1.00000000;
+	// Node 3 - PQ
+	P_3_inj_spec = -0.02400000; Q_3_inj_spec = -0.01200000;
+	// Node 4 - PQ
+	P_4_inj_spec = -0.07600000; Q_4_inj_spec = -0.01600000;
+	// Node 5 - PQ
+	P_5_inj_spec = 0.00000000; Q_5_inj_spec = 0.00000000;
+	// Node 6 - PQ
+	P_6_inj_spec = 0.00000000; Q_6_inj_spec = 0.00000000;
+	// Node 7 - SVC Type I
+	P_7_load = 0.22800000; Q_7_load = 0.10900000;
+	P_7_inj_spec = -0.22800000;
+	vref_7 = 1.00000000 [out=true];
+	K_7 = 10.00000000; KD_7 = 0.00000000; KM_7 = 1.00000000;
+	T1_7 = 0.05000000; T2_7 = 0.01000000; TM_7 = 0.01000000;
+	xL_7 = 0.10000000; xC_7 = 0.10000000;
+	sigmaMax_7 = 3.14159000; sigmaMin_7 = -3.14159000;
+	// Node 8 - SVC Type II
+	P_8_load = 0.30000000; Q_8_load = 0.30000000;
+	P_8_inj_spec = -0.30000000;
+	vref_8 = 1.00000000 [out=true];
+	Kr_8 = 10.00000000; Tr_8 = 0.05000000;
+	bMax_8 = 0.20000000; bMin_8 = -0.05000000;
+	// Node 9 - PQ
+	P_9_inj_spec = 0.00000000; Q_9_inj_spec = 0.00000000;
+	// Node 10 - PQ
+	P_10_inj_spec = -0.05800000; Q_10_inj_spec = -0.02000000;
+	// Node 11 - PQ
+	P_11_inj_spec = 0.00000000; Q_11_inj_spec = 0.00000000;
+	// Node 12 - PQ
+	P_12_inj_spec = -0.11200000; Q_12_inj_spec = -0.07500000;
+	// Node 13 - PV
+	P_13_inj_spec = 0.37000000; v_13_spec = 1.00000000;
+	// Node 14 - PQ
+	P_14_inj_spec = -0.06200000; Q_14_inj_spec = -0.01600000;
+	// Node 15 - PQ
+	P_15_inj_spec = -0.08200000; Q_15_inj_spec = -0.02500000;
+	// Node 16 - PQ
+	P_16_inj_spec = -0.03500000; Q_16_inj_spec = -0.01800000;
+	// Node 17 - PQ
+	P_17_inj_spec = -0.09000000; Q_17_inj_spec = -0.05800000;
+	// Node 18 - PQ
+	P_18_inj_spec = -0.03200000; Q_18_inj_spec = -0.00900000;
+	// Node 19 - PQ
+	P_19_inj_spec = -0.09500000; Q_19_inj_spec = -0.03400000;
+	// Node 20 - PQ
+	P_20_inj_spec = -0.02200000; Q_20_inj_spec = -0.00700000;
+	// Node 21 - PQ
+	P_21_inj_spec = -0.17500000; Q_21_inj_spec = -0.11200000;
+	// Node 22 - PV
+	P_22_inj_spec = 0.21590000; v_22_spec = 1.00000000;
+	// Node 23 - PV
+	P_23_inj_spec = 0.16000000; v_23_spec = 1.00000000;
+	// Node 24 - PQ
+	P_24_inj_spec = -0.08700000; Q_24_inj_spec = -0.06700000;
+	// Node 25 - PQ
+	P_25_inj_spec = 0.00000000; Q_25_inj_spec = 0.00000000;
+	// Node 26 - PQ
+	P_26_inj_spec = -0.03500000; Q_26_inj_spec = -0.02300000;
+	// Node 27 - PV
+	P_27_inj_spec = 0.26910000; v_27_spec = 1.00000000;
+	// Node 28 - PQ
+	P_28_inj_spec = 0.00000000; Q_28_inj_spec = 0.00000000;
+	// Node 29 - PQ
+	P_29_inj_spec = -0.02400000; Q_29_inj_spec = -0.00900000;
+	// Node 30 - PQ
+	P_30_inj_spec = -0.10600000; Q_30_inj_spec = -0.01900000;
+
+	// Y-bus matrix in polar form (|Y|, angle[Y]), built with natID's sparse assembly (see YBusBuilder)
+	absY_1_1=20.8694276016; angleY_1_1=-1.2643698146;
+	absY_1_2=15.8113883008; angleY_1_2=1.8925468812;
+	absY_1_3=5.0898659856; angleY_1_3=1.8281200418;
+	absY_2_1=15.8113883008; angleY_2_1=1.8925468812;
+	absY_2_2=31.4228133120; angleY_2_2=-1.2573360724;
+	absY_2_4=5.5470019623; angleY_2_4=1.9100889412;
+	absY_2_5=4.8507125007; angleY_2_5=1.8157749899;
+	absY_2_6=5.2704627669; angleY_2_6=1.8925468812;
+	absY_3_1=5.0898659856; angleY_3_1=1.8281200418;
+	absY_3_3=29.3334118113; angleY_3_3=-1.3235929489;
+	absY_3_4=24.2535625036; angleY_3_4=1.8157749899;
+	absY_4_2=5.5470019623; angleY_4_2=1.9100889412;
+	absY_4_3=24.2535625036; angleY_4_3=1.8157749899;
+	absY_4_4=57.7525318464; angleY_4_4=-1.3328826863;
+	absY_4_6=24.2535625036; angleY_4_6=1.8157749899;
+	absY_4_12=3.8461538462; angleY_4_12=1.5707963268;
+	absY_5_2=4.8507125007; angleY_5_2=1.8157749899;
+	absY_5_5=12.4937063802; angleY_5_5=-1.2334642853;
+	absY_5_7=7.6923076923; angleY_5_7=1.9655874465;
+	absY_6_2=5.2704627669; angleY_6_2=1.8925468812;
+	absY_6_4=24.2535625036; angleY_6_4=1.8157749899;
+	absY_6_6=87.4986319651; angleY_6_6=-1.3102432325;
+	absY_6_7=11.7041147196; angleY_6_7=1.9295669971;
+	absY_6_8=24.2535625036; angleY_6_8=1.8157749899;
+	absY_6_9=4.7619047619; angleY_6_9=1.5707963268;
+	absY_6_10=1.7857142857; angleY_6_10=1.5707963268;
+	absY_6_28=15.8113883008; angleY_6_28=1.8925468812;
+	absY_7_5=7.6923076923; angleY_7_5=1.9655874465;
+	absY_7_6=11.7041147196; angleY_7_6=1.9295669971;
+	absY_7_7=19.3840994497; angleY_7_7=-1.1975528926;
+	absY_8_6=24.2535625036; angleY_8_6=1.8157749899;
+	absY_8_8=29.0286921473; angleY_8_8=-1.3180688697;
+	absY_8_28=4.7891314261; angleY_8_28=1.8622531213;
+	absY_9_6=4.7619047619; angleY_9_6=1.5707963268;
+	absY_9_9=18.6147186147; angleY_9_9=-1.5707963268;
+	absY_9_10=9.0909090909; angleY_9_10=1.5707963268;
+	absY_9_11=4.7619047619; angleY_9_11=1.5707963268;
+	absY_10_6=1.7857142857; angleY_10_6=1.5707963268;
+	absY_10_9=9.0909090909; angleY_10_9=1.5707963268;
+	absY_10_10=45.4711500884; angleY_10_10=-1.2679580394;
+	absY_10_17=11.7041147196; angleY_10_17=1.9295669971;
+	absY_10_20=4.3768810953; angleY_10_20=1.9756881131;
+	absY_10_21=13.1306432860; angleY_10_21=1.9756881131;
+	absY_10_22=6.0412209333; angleY_10_22=2.0074234866;
+	absY_11_9=4.7619047619; angleY_11_9=1.5707963268;
+	absY_11_11=4.7619047619; angleY_11_11=-1.5707963268;
+	absY_12_4=3.8461538462; angleY_12_4=1.5707963268;
+	absY_12_12=25.1478284633; angleY_12_12=-1.3074821266;
+	absY_12_13=7.1428571429; angleY_12_13=1.5707963268;
+	absY_12_14=3.4921514788; angleY_12_14=2.0032041024;
+	absY_12_15=6.7728546148; angleY_12_15=2.0647376957;
+	absY_12_16=4.5596075259; angleY_12_16=1.9936502529;
+	absY_13_12=7.1428571429; angleY_13_12=1.5707963268;
+	absY_13_13=7.1428571429; angleY_13_13=-1.5707963268;
+	absY_14_12=3.4921514788; angleY_14_12=2.0032041024;
+	absY_14_14=6.7185196051; angleY_14_14=-0.9419155003;
+	absY_14_15=3.3633639700; angleY_14_15=2.4037775935;
+	absY_15_12=6.7728546148; angleY_15_12=2.0647376957;
+	absY_15_14=3.3633639700; angleY_15_14=2.4037775935;
+	absY_15_15=18.4985552020; angleY_15_15=-1.0303484168;
+	absY_15_18=4.0655781409; angleY_15_18=2.0344439358;
+	absY_15_23=4.4721359550; angleY_15_23=2.0344439358;
+	absY_16_12=4.5596075259; angleY_16_12=1.9936502529;
+	absY_16_16=9.4096243133; angleY_16_16=-1.1604845024;
+	absY_16_17=4.8507125007; angleY_16_17=1.9693187725;
+	absY_17_10=11.7041147196; angleY_17_10=1.9295669971;
+	absY_17_16=4.8507125007; angleY_17_16=1.9693187725;
+	absY_17_17=16.5521177720; angleY_17_17=-1.2003789286;
+	absY_18_15=4.0655781409; angleY_18_15=2.0344439358;
+	absY_18_18=11.0486271939; angleY_18_18=-1.1268948045;
+	absY_18_19=6.9843029577; angleY_18_19=2.0032041024;
+	absY_19_18=6.9843029577; angleY_19_18=2.0032041024;
+	absY_19_19=20.1132203196; angleY_19_19=-1.1563506911;
+	absY_19_20=13.1306432860; angleY_19_20=1.9756881131;
+	absY_20_10=4.3768810953; angleY_20_10=1.9756881131;
+	absY_20_19=13.1306432860; angleY_20_19=1.9756881131;
+	absY_20_20=17.5075243813; angleY_20_20=-1.1659045405;
+	absY_21_10=13.1306432860; angleY_21_10=1.9756881131;
+	absY_21_21=57.8344844034; angleY_21_21=-1.1204812611;
+	absY_21_22=44.7213595500; angleY_21_22=2.0344439358;
+	absY_22_10=6.0412209333; angleY_22_10=2.0074234866;
+	absY_22_21=44.7213595500; angleY_22_21=2.0344439358;
+	absY_22_22=55.3487009321; angleY_22_22=-1.0997386455;
+	absY_22_24=4.6225016352; angleY_22_24=2.1587989303;
+	absY_23_15=4.4721359550; angleY_23_15=2.0344439358;
+	absY_23_23=7.8089663501; angleY_23_23=-1.1135261824;
+	absY_23_24=3.3370432213; angleY_23_24=2.0195196708;
+	absY_24_22=4.6225016352; angleY_24_22=2.1587989303;
+	absY_24_23=3.3370432213; angleY_24_23=2.0195196708;
+	absY_24_24=10.5664874342; angleY_24_24=-1.0429451545;
+	absY_24_25=2.6261286572; angleY_24_25=2.0931997585;
+	absY_25_24=2.6261286572; angleY_25_24=2.0931997585;
+	absY_25_25=9.0356715584; angleY_25_25=-1.0525416307;
+	absY_25_26=2.1984660059; angleY_25_26=2.1527014449;
+	absY_25_27=4.2182454061; angleY_25_27=2.0533096218;
+	absY_26_25=2.1984660059; angleY_26_25=2.1527014449;
+	absY_26_26=2.1984660059; angleY_26_26=-0.9888912087;
+	absY_27_25=4.2182454061; angleY_27_25=2.0533096218;
+	absY_27_27=10.0782145163; angleY_27_27=-1.2025467947;
+	absY_27_28=2.5000000000; angleY_27_28=1.5707963268;
+	absY_27_29=2.1091227030; angleY_27_29=2.0533096218;
+	absY_27_30=1.4705882353; angleY_27_30=2.0607536530;
+	absY_28_6=15.8113883008; angleY_28_6=1.8925468812;
+	absY_28_8=4.7891314261; angleY_28_8=1.8622531213;
+	absY_28_27=2.5000000000; angleY_28_27=1.5707963268;
+	absY_28_28=22.9746668473; angleY_28_28=-1.2895747388;
+	absY_29_27=2.1091227030; angleY_29_27=2.0533096218;
+	absY_29_29=4.0698788632; angleY_29_29=-1.0846966754;
+	absY_29_30=1.9607843137; angleY_29_30=2.0607536530;
+	absY_30_27=1.4705882353; angleY_30_27=2.0607536530;
+	absY_30_29=1.9607843137; angleY_30_29=2.0607536530;
+	absY_30_30=3.4313725490; angleY_30_30=-1.0808390005;
+
+ODEs:
+	// SVC Type I dynamics on bus 7 (Milano eq. 19.3)
+	vM_7' = (KM_7*v_7 - vM_7)/TM_7
+	sigma_7' = -KD_7 + K_7*T1_7/(T2_7*TM_7)*(vM_7 - KM_7*v_7) + K_7/T2_7*(vref_7 - vM_7)
+	// SVC Type II dynamics on bus 8 (Milano eq. 19.4)
+	bSvc_8' = (Kr_8*(vref_8 - v_8) - bSvc_8)/Tr_8
+
+NLEs:
+	// Node 1 - Slack
+	phi_1 - phi_1_spec = 0
+	v_1 - v_1_spec = 0
+	// Node 2 - PV
+	v_2*v_1*absY_2_1*cos(phi_2-phi_1-angleY_2_1) + v_2*v_2*absY_2_2*cos(angleY_2_2) + v_2*v_4*absY_2_4*cos(phi_2-phi_4-angleY_2_4) + v_2*v_5*absY_2_5*cos(phi_2-phi_5-angleY_2_5) + v_2*v_6*absY_2_6*cos(phi_2-phi_6-angleY_2_6) - P_2_inj_spec = 0
+	v_2 - v_2_spec = 0
+	// Node 3 - PQ
+	v_3*v_1*absY_3_1*cos(phi_3-phi_1-angleY_3_1) + v_3*v_3*absY_3_3*cos(angleY_3_3) + v_3*v_4*absY_3_4*cos(phi_3-phi_4-angleY_3_4) - P_3_inj_spec = 0
+	v_3*v_1*absY_3_1*sin(phi_3-phi_1-angleY_3_1) - v_3*v_3*absY_3_3*sin(angleY_3_3) + v_3*v_4*absY_3_4*sin(phi_3-phi_4-angleY_3_4) - Q_3_inj_spec = 0
+	// Node 4 - PQ
+	v_4*v_2*absY_4_2*cos(phi_4-phi_2-angleY_4_2) + v_4*v_3*absY_4_3*cos(phi_4-phi_3-angleY_4_3) + v_4*v_4*absY_4_4*cos(angleY_4_4) + v_4*v_6*absY_4_6*cos(phi_4-phi_6-angleY_4_6) + v_4*v_12*absY_4_12*cos(phi_4-phi_12-angleY_4_12) - P_4_inj_spec = 0
+	v_4*v_2*absY_4_2*sin(phi_4-phi_2-angleY_4_2) + v_4*v_3*absY_4_3*sin(phi_4-phi_3-angleY_4_3) - v_4*v_4*absY_4_4*sin(angleY_4_4) + v_4*v_6*absY_4_6*sin(phi_4-phi_6-angleY_4_6) + v_4*v_12*absY_4_12*sin(phi_4-phi_12-angleY_4_12) - Q_4_inj_spec = 0
+	// Node 5 - PQ
+	v_5*v_2*absY_5_2*cos(phi_5-phi_2-angleY_5_2) + v_5*v_5*absY_5_5*cos(angleY_5_5) + v_5*v_7*absY_5_7*cos(phi_5-phi_7-angleY_5_7) - P_5_inj_spec = 0
+	v_5*v_2*absY_5_2*sin(phi_5-phi_2-angleY_5_2) - v_5*v_5*absY_5_5*sin(angleY_5_5) + v_5*v_7*absY_5_7*sin(phi_5-phi_7-angleY_5_7) - Q_5_inj_spec = 0
+	// Node 6 - PQ
+	v_6*v_2*absY_6_2*cos(phi_6-phi_2-angleY_6_2) + v_6*v_4*absY_6_4*cos(phi_6-phi_4-angleY_6_4) + v_6*v_6*absY_6_6*cos(angleY_6_6) + v_6*v_7*absY_6_7*cos(phi_6-phi_7-angleY_6_7) + v_6*v_8*absY_6_8*cos(phi_6-phi_8-angleY_6_8) + v_6*v_9*absY_6_9*cos(phi_6-phi_9-angleY_6_9) + v_6*v_10*absY_6_10*cos(phi_6-phi_10-angleY_6_10) + v_6*v_28*absY_6_28*cos(phi_6-phi_28-angleY_6_28) - P_6_inj_spec = 0
+	v_6*v_2*absY_6_2*sin(phi_6-phi_2-angleY_6_2) + v_6*v_4*absY_6_4*sin(phi_6-phi_4-angleY_6_4) - v_6*v_6*absY_6_6*sin(angleY_6_6) + v_6*v_7*absY_6_7*sin(phi_6-phi_7-angleY_6_7) + v_6*v_8*absY_6_8*sin(phi_6-phi_8-angleY_6_8) + v_6*v_9*absY_6_9*sin(phi_6-phi_9-angleY_6_9) + v_6*v_10*absY_6_10*sin(phi_6-phi_10-angleY_6_10) + v_6*v_28*absY_6_28*sin(phi_6-phi_28-angleY_6_28) - Q_6_inj_spec = 0
+	// Node 7 - SVC Type I
+	v_7*v_5*absY_7_5*cos(phi_7-phi_5-angleY_7_5) + v_7*v_6*absY_7_6*cos(phi_7-phi_6-angleY_7_6) + v_7*v_7*absY_7_7*cos(angleY_7_7) - P_7_inj_spec = 0
+	v_7*v_5*absY_7_5*sin(phi_7-phi_5-angleY_7_5) + v_7*v_6*absY_7_6*sin(phi_7-phi_6-angleY_7_6) - v_7*v_7*absY_7_7*sin(angleY_7_7) - ((3.14159265358979*xL_7/xC_7 - 2*3.14159265358979 + 2*sigma_7 - sin(2*sigma_7)) / (3.14159265358979*xL_7))*(v_7*v_7) + Q_7_load = 0
+	vh_7 - v_7 = 0
+	bEff_7 - ((3.14159265358979*xL_7/xC_7 - 2*3.14159265358979 + 2*sigma_7 - sin(2*sigma_7)) / (3.14159265358979*xL_7)) = 0
+	q_7 - bEff_7*(v_7*v_7) = 0
+	// Node 8 - SVC Type II
+	v_8*v_6*absY_8_6*cos(phi_8-phi_6-angleY_8_6) + v_8*v_8*absY_8_8*cos(angleY_8_8) + v_8*v_28*absY_8_28*cos(phi_8-phi_28-angleY_8_28) - P_8_inj_spec = 0
+	v_8*v_6*absY_8_6*sin(phi_8-phi_6-angleY_8_6) - v_8*v_8*absY_8_8*sin(angleY_8_8) + v_8*v_28*absY_8_28*sin(phi_8-phi_28-angleY_8_28) - bSvc_8*(v_8*v_8) + Q_8_load = 0
+	vh_8 - v_8 = 0
+	q_8 - bSvc_8*(v_8*v_8) = 0
+	// Node 9 - PQ
+	v_9*v_6*absY_9_6*cos(phi_9-phi_6-angleY_9_6) + v_9*v_9*absY_9_9*cos(angleY_9_9) + v_9*v_10*absY_9_10*cos(phi_9-phi_10-angleY_9_10) + v_9*v_11*absY_9_11*cos(phi_9-phi_11-angleY_9_11) - P_9_inj_spec = 0
+	v_9*v_6*absY_9_6*sin(phi_9-phi_6-angleY_9_6) - v_9*v_9*absY_9_9*sin(angleY_9_9) + v_9*v_10*absY_9_10*sin(phi_9-phi_10-angleY_9_10) + v_9*v_11*absY_9_11*sin(phi_9-phi_11-angleY_9_11) - Q_9_inj_spec = 0
+	// Node 10 - PQ
+	v_10*v_6*absY_10_6*cos(phi_10-phi_6-angleY_10_6) + v_10*v_9*absY_10_9*cos(phi_10-phi_9-angleY_10_9) + v_10*v_10*absY_10_10*cos(angleY_10_10) + v_10*v_17*absY_10_17*cos(phi_10-phi_17-angleY_10_17) + v_10*v_20*absY_10_20*cos(phi_10-phi_20-angleY_10_20) + v_10*v_21*absY_10_21*cos(phi_10-phi_21-angleY_10_21) + v_10*v_22*absY_10_22*cos(phi_10-phi_22-angleY_10_22) - P_10_inj_spec = 0
+	v_10*v_6*absY_10_6*sin(phi_10-phi_6-angleY_10_6) + v_10*v_9*absY_10_9*sin(phi_10-phi_9-angleY_10_9) - v_10*v_10*absY_10_10*sin(angleY_10_10) + v_10*v_17*absY_10_17*sin(phi_10-phi_17-angleY_10_17) + v_10*v_20*absY_10_20*sin(phi_10-phi_20-angleY_10_20) + v_10*v_21*absY_10_21*sin(phi_10-phi_21-angleY_10_21) + v_10*v_22*absY_10_22*sin(phi_10-phi_22-angleY_10_22) - Q_10_inj_spec = 0
+	// Node 11 - PQ
+	v_11*v_9*absY_11_9*cos(phi_11-phi_9-angleY_11_9) + v_11*v_11*absY_11_11*cos(angleY_11_11) - P_11_inj_spec = 0
+	v_11*v_9*absY_11_9*sin(phi_11-phi_9-angleY_11_9) - v_11*v_11*absY_11_11*sin(angleY_11_11) - Q_11_inj_spec = 0
+	// Node 12 - PQ
+	v_12*v_4*absY_12_4*cos(phi_12-phi_4-angleY_12_4) + v_12*v_12*absY_12_12*cos(angleY_12_12) + v_12*v_13*absY_12_13*cos(phi_12-phi_13-angleY_12_13) + v_12*v_14*absY_12_14*cos(phi_12-phi_14-angleY_12_14) + v_12*v_15*absY_12_15*cos(phi_12-phi_15-angleY_12_15) + v_12*v_16*absY_12_16*cos(phi_12-phi_16-angleY_12_16) - P_12_inj_spec = 0
+	v_12*v_4*absY_12_4*sin(phi_12-phi_4-angleY_12_4) - v_12*v_12*absY_12_12*sin(angleY_12_12) + v_12*v_13*absY_12_13*sin(phi_12-phi_13-angleY_12_13) + v_12*v_14*absY_12_14*sin(phi_12-phi_14-angleY_12_14) + v_12*v_15*absY_12_15*sin(phi_12-phi_15-angleY_12_15) + v_12*v_16*absY_12_16*sin(phi_12-phi_16-angleY_12_16) - Q_12_inj_spec = 0
+	// Node 13 - PV
+	v_13*v_12*absY_13_12*cos(phi_13-phi_12-angleY_13_12) + v_13*v_13*absY_13_13*cos(angleY_13_13) - P_13_inj_spec = 0
+	v_13 - v_13_spec = 0
+	// Node 14 - PQ
+	v_14*v_12*absY_14_12*cos(phi_14-phi_12-angleY_14_12) + v_14*v_14*absY_14_14*cos(angleY_14_14) + v_14*v_15*absY_14_15*cos(phi_14-phi_15-angleY_14_15) - P_14_inj_spec = 0
+	v_14*v_12*absY_14_12*sin(phi_14-phi_12-angleY_14_12) - v_14*v_14*absY_14_14*sin(angleY_14_14) + v_14*v_15*absY_14_15*sin(phi_14-phi_15-angleY_14_15) - Q_14_inj_spec = 0
+	// Node 15 - PQ
+	v_15*v_12*absY_15_12*cos(phi_15-phi_12-angleY_15_12) + v_15*v_14*absY_15_14*cos(phi_15-phi_14-angleY_15_14) + v_15*v_15*absY_15_15*cos(angleY_15_15) + v_15*v_18*absY_15_18*cos(phi_15-phi_18-angleY_15_18) + v_15*v_23*absY_15_23*cos(phi_15-phi_23-angleY_15_23) - P_15_inj_spec = 0
+	v_15*v_12*absY_15_12*sin(phi_15-phi_12-angleY_15_12) + v_15*v_14*absY_15_14*sin(phi_15-phi_14-angleY_15_14) - v_15*v_15*absY_15_15*sin(angleY_15_15) + v_15*v_18*absY_15_18*sin(phi_15-phi_18-angleY_15_18) + v_15*v_23*absY_15_23*sin(phi_15-phi_23-angleY_15_23) - Q_15_inj_spec = 0
+	// Node 16 - PQ
+	v_16*v_12*absY_16_12*cos(phi_16-phi_12-angleY_16_12) + v_16*v_16*absY_16_16*cos(angleY_16_16) + v_16*v_17*absY_16_17*cos(phi_16-phi_17-angleY_16_17) - P_16_inj_spec = 0
+	v_16*v_12*absY_16_12*sin(phi_16-phi_12-angleY_16_12) - v_16*v_16*absY_16_16*sin(angleY_16_16) + v_16*v_17*absY_16_17*sin(phi_16-phi_17-angleY_16_17) - Q_16_inj_spec = 0
+	// Node 17 - PQ
+	v_17*v_10*absY_17_10*cos(phi_17-phi_10-angleY_17_10) + v_17*v_16*absY_17_16*cos(phi_17-phi_16-angleY_17_16) + v_17*v_17*absY_17_17*cos(angleY_17_17) - P_17_inj_spec = 0
+	v_17*v_10*absY_17_10*sin(phi_17-phi_10-angleY_17_10) + v_17*v_16*absY_17_16*sin(phi_17-phi_16-angleY_17_16) - v_17*v_17*absY_17_17*sin(angleY_17_17) - Q_17_inj_spec = 0
+	// Node 18 - PQ
+	v_18*v_15*absY_18_15*cos(phi_18-phi_15-angleY_18_15) + v_18*v_18*absY_18_18*cos(angleY_18_18) + v_18*v_19*absY_18_19*cos(phi_18-phi_19-angleY_18_19) - P_18_inj_spec = 0
+	v_18*v_15*absY_18_15*sin(phi_18-phi_15-angleY_18_15) - v_18*v_18*absY_18_18*sin(angleY_18_18) + v_18*v_19*absY_18_19*sin(phi_18-phi_19-angleY_18_19) - Q_18_inj_spec = 0
+	// Node 19 - PQ
+	v_19*v_18*absY_19_18*cos(phi_19-phi_18-angleY_19_18) + v_19*v_19*absY_19_19*cos(angleY_19_19) + v_19*v_20*absY_19_20*cos(phi_19-phi_20-angleY_19_20) - P_19_inj_spec = 0
+	v_19*v_18*absY_19_18*sin(phi_19-phi_18-angleY_19_18) - v_19*v_19*absY_19_19*sin(angleY_19_19) + v_19*v_20*absY_19_20*sin(phi_19-phi_20-angleY_19_20) - Q_19_inj_spec = 0
+	// Node 20 - PQ
+	v_20*v_10*absY_20_10*cos(phi_20-phi_10-angleY_20_10) + v_20*v_19*absY_20_19*cos(phi_20-phi_19-angleY_20_19) + v_20*v_20*absY_20_20*cos(angleY_20_20) - P_20_inj_spec = 0
+	v_20*v_10*absY_20_10*sin(phi_20-phi_10-angleY_20_10) + v_20*v_19*absY_20_19*sin(phi_20-phi_19-angleY_20_19) - v_20*v_20*absY_20_20*sin(angleY_20_20) - Q_20_inj_spec = 0
+	// Node 21 - PQ
+	v_21*v_10*absY_21_10*cos(phi_21-phi_10-angleY_21_10) + v_21*v_21*absY_21_21*cos(angleY_21_21) + v_21*v_22*absY_21_22*cos(phi_21-phi_22-angleY_21_22) - P_21_inj_spec = 0
+	v_21*v_10*absY_21_10*sin(phi_21-phi_10-angleY_21_10) - v_21*v_21*absY_21_21*sin(angleY_21_21) + v_21*v_22*absY_21_22*sin(phi_21-phi_22-angleY_21_22) - Q_21_inj_spec = 0
+	// Node 22 - PV
+	v_22*v_10*absY_22_10*cos(phi_22-phi_10-angleY_22_10) + v_22*v_21*absY_22_21*cos(phi_22-phi_21-angleY_22_21) + v_22*v_22*absY_22_22*cos(angleY_22_22) + v_22*v_24*absY_22_24*cos(phi_22-phi_24-angleY_22_24) - P_22_inj_spec = 0
+	v_22 - v_22_spec = 0
+	// Node 23 - PV
+	v_23*v_15*absY_23_15*cos(phi_23-phi_15-angleY_23_15) + v_23*v_23*absY_23_23*cos(angleY_23_23) + v_23*v_24*absY_23_24*cos(phi_23-phi_24-angleY_23_24) - P_23_inj_spec = 0
+	v_23 - v_23_spec = 0
+	// Node 24 - PQ
+	v_24*v_22*absY_24_22*cos(phi_24-phi_22-angleY_24_22) + v_24*v_23*absY_24_23*cos(phi_24-phi_23-angleY_24_23) + v_24*v_24*absY_24_24*cos(angleY_24_24) + v_24*v_25*absY_24_25*cos(phi_24-phi_25-angleY_24_25) - P_24_inj_spec = 0
+	v_24*v_22*absY_24_22*sin(phi_24-phi_22-angleY_24_22) + v_24*v_23*absY_24_23*sin(phi_24-phi_23-angleY_24_23) - v_24*v_24*absY_24_24*sin(angleY_24_24) + v_24*v_25*absY_24_25*sin(phi_24-phi_25-angleY_24_25) - Q_24_inj_spec = 0
+	// Node 25 - PQ
+	v_25*v_24*absY_25_24*cos(phi_25-phi_24-angleY_25_24) + v_25*v_25*absY_25_25*cos(angleY_25_25) + v_25*v_26*absY_25_26*cos(phi_25-phi_26-angleY_25_26) + v_25*v_27*absY_25_27*cos(phi_25-phi_27-angleY_25_27) - P_25_inj_spec = 0
+	v_25*v_24*absY_25_24*sin(phi_25-phi_24-angleY_25_24) - v_25*v_25*absY_25_25*sin(angleY_25_25) + v_25*v_26*absY_25_26*sin(phi_25-phi_26-angleY_25_26) + v_25*v_27*absY_25_27*sin(phi_25-phi_27-angleY_25_27) - Q_25_inj_spec = 0
+	// Node 26 - PQ
+	v_26*v_25*absY_26_25*cos(phi_26-phi_25-angleY_26_25) + v_26*v_26*absY_26_26*cos(angleY_26_26) - P_26_inj_spec = 0
+	v_26*v_25*absY_26_25*sin(phi_26-phi_25-angleY_26_25) - v_26*v_26*absY_26_26*sin(angleY_26_26) - Q_26_inj_spec = 0
+	// Node 27 - PV
+	v_27*v_25*absY_27_25*cos(phi_27-phi_25-angleY_27_25) + v_27*v_27*absY_27_27*cos(angleY_27_27) + v_27*v_28*absY_27_28*cos(phi_27-phi_28-angleY_27_28) + v_27*v_29*absY_27_29*cos(phi_27-phi_29-angleY_27_29) + v_27*v_30*absY_27_30*cos(phi_27-phi_30-angleY_27_30) - P_27_inj_spec = 0
+	v_27 - v_27_spec = 0
+	// Node 28 - PQ
+	v_28*v_6*absY_28_6*cos(phi_28-phi_6-angleY_28_6) + v_28*v_8*absY_28_8*cos(phi_28-phi_8-angleY_28_8) + v_28*v_27*absY_28_27*cos(phi_28-phi_27-angleY_28_27) + v_28*v_28*absY_28_28*cos(angleY_28_28) - P_28_inj_spec = 0
+	v_28*v_6*absY_28_6*sin(phi_28-phi_6-angleY_28_6) + v_28*v_8*absY_28_8*sin(phi_28-phi_8-angleY_28_8) + v_28*v_27*absY_28_27*sin(phi_28-phi_27-angleY_28_27) - v_28*v_28*absY_28_28*sin(angleY_28_28) - Q_28_inj_spec = 0
+	// Node 29 - PQ
+	v_29*v_27*absY_29_27*cos(phi_29-phi_27-angleY_29_27) + v_29*v_29*absY_29_29*cos(angleY_29_29) + v_29*v_30*absY_29_30*cos(phi_29-phi_30-angleY_29_30) - P_29_inj_spec = 0
+	v_29*v_27*absY_29_27*sin(phi_29-phi_27-angleY_29_27) - v_29*v_29*absY_29_29*sin(angleY_29_29) + v_29*v_30*absY_29_30*sin(phi_29-phi_30-angleY_29_30) - Q_29_inj_spec = 0
+	// Node 30 - PQ
+	v_30*v_27*absY_30_27*cos(phi_30-phi_27-angleY_30_27) + v_30*v_29*absY_30_29*cos(phi_30-phi_29-angleY_30_29) + v_30*v_30*absY_30_30*cos(angleY_30_30) - P_30_inj_spec = 0
+	v_30*v_27*absY_30_27*sin(phi_30-phi_27-angleY_30_27) + v_30*v_29*absY_30_29*sin(phi_30-phi_29-angleY_30_29) - v_30*v_30*absY_30_30*sin(angleY_30_30) - Q_30_inj_spec = 0
+
+end

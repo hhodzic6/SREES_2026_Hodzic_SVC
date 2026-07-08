@@ -1,0 +1,42 @@
+Header:
+	newTab = false
+	drawPlots = true
+end
+
+Model [name="SVC visualization for case30.m"]:
+
+Plots [backColor=auto]:
+	//Voltage magnitude at bus 7 (SVC Type I)
+	linePlot [xLabel="Time [s]" yLabel="V [pu]" name="Bus 7 voltage" anchor=TR legend=true nCols=1 anchorX=130 anchorY=35]:
+		@x << t
+		@y << vh_7 [colorL=black colorD=red width=2 name="vh_7"]
+		@y << vref_7 [colorL=darkGreen colorD=green width=2 name="vref_7"]
+	end
+	//SVC Type I state variables at bus 7
+	linePlot [xLabel="Time [s]" yLabel="sigma [rad], vM [pu]" name="Bus 7 SVC-I states" anchor=TR legend=true nCols=1 anchorX=130 anchorY=35]:
+		@x << t
+		@y << sigma_7 [colorL=darkBlue colorD=cyan width=2 name="sigma_7"]
+		@y << vM_7 [colorL=darkYellow colorD=lightBlue width=2 name="vM_7"]
+	end
+	//Reactive power injected by the SVC at bus 7
+	linePlot [xLabel="Time [s]" yLabel="Q [pu]" name="Bus 7 SVC Q" anchor=TR legend=true nCols=1 anchorX=130 anchorY=35]:
+		@x << t
+		@y << q_7 [colorL=darkRed colorD=magenta width=2 name="q_7"]
+	end
+	//Voltage magnitude at bus 8 (SVC Type II)
+	linePlot [xLabel="Time [s]" yLabel="V [pu]" name="Bus 8 voltage" anchor=TR legend=true nCols=1 anchorX=130 anchorY=35]:
+		@x << t
+		@y << vh_8 [colorL=black colorD=red width=2 name="vh_8"]
+		@y << vref_8 [colorL=darkGreen colorD=green width=2 name="vref_8"]
+	end
+	//SVC Type II susceptance state at bus 8
+	linePlot [xLabel="Time [s]" yLabel="bSvc [pu]" name="Bus 8 SVC-II state" anchor=TR legend=true nCols=1 anchorX=130 anchorY=35]:
+		@x << t
+		@y << bSvc_8 [colorL=darkBlue colorD=cyan width=2 name="bSvc_8"]
+	end
+	//Reactive power injected by the SVC at bus 8
+	linePlot [xLabel="Time [s]" yLabel="Q [pu]" name="Bus 8 SVC Q" anchor=TR legend=true nCols=1 anchorX=130 anchorY=35]:
+		@x << t
+		@y << q_8 [colorL=darkRed colorD=magenta width=2 name="q_8"]
+	end
+end //end of the visual model

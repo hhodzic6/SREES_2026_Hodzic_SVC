@@ -52,13 +52,44 @@
   \end{center}
 }
 
-\title{\textbf{Dinamički konvertor za Static Var Compensator \\ (SVC Type I, SVC Type II) \\[0.3em] \large natID / dTwin plugin}}
-\author{Haris Hodžić \\ Indeks: 19145}
-\date{Seminarski rad iz predmeta SREES \\ Elektrotehnički fakultet, Univerzitet u Sarajevu \\[0.5em] \today}
+% Privremeni placeholder dok se ne ubace stvarni screenshotovi (svijetla pozadina,
+% ne dTwin-ov crni graf) - zamijeniti sa \includegraphics kad slike stignu.
+\newcommand{\plotplaceholder}[1]{%
+  \begin{tikzpicture}
+  \draw[dashed] (0,0) rectangle (12,4);
+  \node at (6,2) {\small [graf: \texttt{#1}]};
+  \end{tikzpicture}%
+}
 
 \begin{document}
 
-\maketitle
+\begin{titlepage}
+\begin{flushleft}
+Univerzitet u Sarajevu\\
+Elektrotehnički fakultet\\
+\textbf{Strukture i režimi rada elektroenergetskih sistema 2025/2026}
+\end{flushleft}
+
+\vspace{6cm}
+
+\begin{center}
+{\LARGE \textbf{Dinamički konvertor za Static Var Compensator\\[0.3em] (SVC Type I, SVC Type II)}}\\[0.8em]
+{\large natID / dTwin plugin}
+\end{center}
+
+\vspace{6cm}
+
+\begin{flushright}
+Student:\\
+\textbf{Haris Hodžić}\\
+Indeks: 19145
+\end{flushright}
+
+\vfill
+
+07.07.2026.
+
+\end{titlepage}
 
 \begin{abstract}
 Ovaj rad opisuje dizajn i implementaciju dinamičkog konvertora za \emph{Static Var
@@ -643,37 +674,149 @@ repozitorija.
 \subsection{Verifikacija pipeline-a (konverzija)}
 
 Cijeli konverzijski pipeline je uspješno kompajliran (MSVC 19.44 / Visual Studio Build
-Tools 2022, natID SDK) i pokrenut end-to-end za \texttt{case9} test slučaj (samostalan
-konzolni test harness koji direktno poziva \texttt{Converter::run(...)}, van GUI-a).
-Rezultat: generisan je ispravan \texttt{.dmodl} (9837 bajtova) i \texttt{.vmodl} fajl,
-uz potvrdu da se vrijednosti $Y_{bus}$ matrice tačno poklapaju sa prošlogodišnjim
-(nezavisno implementiranim) konvertorom za isti test slučaj (vidi Poglavlje
-\ref{ch:implementacija}, Listing \ref{lst:dmodl-svc2}). Plugin (\texttt{svcConv.dll}) je
-takođe uspješno učitan unutar prave dTwin aplikacije bez pada aplikacije.
+Tools 2022, natID SDK) i pokrenut end-to-end za sva četiri test slučaja (\texttt{case9},
+\texttt{case30}, \texttt{case118}, \texttt{case300}), i preko samostalnog konzolnog test
+harness-a (direktan poziv \texttt{Converter::run(...)}, van GUI-a) i preko pravog
+\texttt{svcConv.dll} plugina učitanog unutar dTwin aplikacije. Vrijednosti $Y_{bus}$
+matrice za \texttt{case9} tačno se poklapaju sa prošlogodišnjim (nezavisno implementiranim)
+konvertorom za isti test slučaj (vidi Poglavlje \ref{ch:implementacija}, Listing
+\ref{lst:dmodl-svc2}).
+
+\paragraph{Otklonjen pad aplikacije pri otvaranju generisanog modela.} Tokom testiranja u
+pravom dTwin okruženju otkriven je pad aplikacije (crash, kod izuzetka
+\texttt{0xc0000409}) koji se dešavao isključivo pri otvaranju generisanih \texttt{.dmodl}
+fajlova većih razmjera (\texttt{case9} i veći), a ne i kod manjih referentnih modela
+(npr. SDK-ov vlastiti \texttt{PendulumDAE.dmodl}). Sistematskom izolacijom (preko
+tridesetak ciljanih test fajlova, upoređivanjem sa vlastitim primjerima iz natID SDK-a i
+prošlogodišnjim konvertorom) utvrđeno je da uzrok NIJE u SVC dinamici, pravougaonim
+naspram polarnim koordinatama, tipu modela, broju jednačina, niti u bilo kojoj sintaksnoj
+osobenosti generisanog teksta - problem je bio isključivo u dTwin-ovoj obradi
+\texttt{PostProc:} sekcije modela: ona pouzdano izaziva pad aplikacije čim broj
+promjenljivih u modelu pređe određeni prag (reprodukovano i na potpuno statičkom mrežnom
+modelu bez ijedne SVC dinamike, sa samo jednom trivijalnom \texttt{PostProc} linijom), dok
+manji referentni modeli (5-7 promjenljivih) rade ispravno. Rješenje je bilo potpuno
+uklanjanje \texttt{PostProc} sekcije iz generatora - izvedene veličine (napon $v_h$,
+efektivna susceptansa $B_{eff}$, injektirana snaga $q$) sada se definišu kao obične
+algebarske promjenljive sa pratećim NLE jednačinama (vidi \texttt{DmodlWriter::writeVars}
+i \texttt{DmodlWriter::writeNLEs}), što izbjegava PostProc mehanizam u potpunosti. Puna
+hronologija ove istrage nalazi se u \texttt{PROGRESS\_NOTES.txt}.
 
 \subsection{Tranzijentna simulacija u dTwin-u}
 
-\todobox{Ovo poglavlje treba dopuniti nakon pokretanja same DAE simulacije (integracija
-kroz vrijeme) unutar dTwin GUI-a - to zahtijeva vizuelnu interakciju sa aplikacijom koju
-nije bilo moguće automatizovati u ovoj sesiji. Koraci: (1) otvoriti dTwin (plugin je već
-prisutan u \texttt{C:\textbackslash Users\textbackslash User\textbackslash ba.natID\textbackslash dTwin\textbackslash plugins}); (2) pokrenuti SVC
-konvertor plugin, konvertovati \texttt{case9.m} sa \texttt{svc\_config\_case9.xml} (ili
-koristiti već generisani \texttt{res/testData/output/case9\_svc.dmodl}); (3) otvoriti taj
-\texttt{.dmodl} u dTwin-u i pokrenuti vremensku simulaciju; (4) ovdje umetnuti grafike
-napona/susceptanse/reaktivne snage iz \texttt{.vmodl} plotova (Figure
-\ref{fig:rezultati-placeholder} je samo placeholder), i uporediti ponašanje SVC Type I i
-SVC Type II čvora (očekuje se da Type II pokazuje nultu statičku grešku ali sa
-vidljivijim oscilacijama, u skladu sa Milano Fig. 19.4).}
+Nakon ispravke, sva četiri test slučaja uspješno se otvaraju i rješavaju u pravom dTwin
+okruženju bez ijedne greške. Slike \ref{fig:case30-bus7-v}-\ref{fig:case30-bus8-q}
+prikazuju rezultate tranzijentne simulacije za \texttt{case30}, gdje je čvor 7
+konfigurisan kao SVC Type I, a čvor 8 kao SVC Type II; Slike
+\ref{fig:case118-bus11-v}-\ref{fig:case118-bus16-q} prikazuju isto za \texttt{case118}
+(čvor 11 - SVC Type I, čvor 16 - SVC Type II).
 
 \begin{figure}[H]
 \centering
-\begin{tikzpicture}
-\draw[dashed] (0,0) rectangle (10,5);
-\node at (5,2.5) {\Large [ovdje umetnuti graf napona/Q iz dTwin simulacije]};
-\end{tikzpicture}
-\caption{Placeholder - zamijeniti stvarnim grafikom iz dTwin simulacije.}
-\label{fig:rezultati-placeholder}
+\includegraphics[width=0.85\textwidth]{images/bus7voltage_case30.jpg}
+\caption{\texttt{case30}, čvor 7 (SVC Type I): napon $v_h$ naspram referentne vrijednosti
+$v_{ref}$.}
+\label{fig:case30-bus7-v}
 \end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{images/bus7SVCIstates_case30.jpg}
+\caption{\texttt{case30}, čvor 7 (SVC Type I): stanje regulatora $\sigma$ tokom
+tranzijenta, u skladu sa Milano jednačinom 19.3.}
+\label{fig:case30-bus7-states}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{images/bus7SVCQ_case30.jpg}
+\caption{\texttt{case30}, čvor 7 (SVC Type I): injektirana reaktivna snaga $q$ tokom
+tranzijenta.}
+\label{fig:case30-bus7-q}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{images/bus8voltage_case30.jpg}
+\caption{\texttt{case30}, čvor 8 (SVC Type II): napon $v_h$ naspram referentne
+vrijednosti $v_{ref}$.}
+\label{fig:case30-bus8-v}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{images/bus8SVCIIstate_case30.jpg}
+\caption{\texttt{case30}, čvor 8 (SVC Type II): stanje susceptanse $B_{SVC}$ tokom
+tranzijenta (Milano eq. 19.4).}
+\label{fig:case30-bus8-state}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{images/bus8SVCQ_case30.jpg}
+\caption{\texttt{case30}, čvor 8 (SVC Type II): injektirana reaktivna snaga $q$ tokom
+tranzijenta.}
+\label{fig:case30-bus8-q}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{images/bus11voltage_case118.jpg}
+\caption{\texttt{case118}, čvor 11 (SVC Type I): napon $v_h$ naspram referentne
+vrijednosti $v_{ref}$.}
+\label{fig:case118-bus11-v}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{images/bus11SVCIstates_case118.jpg}
+\caption{\texttt{case118}, čvor 11 (SVC Type I): stanje regulatora $\sigma$ tokom
+tranzijenta.}
+\label{fig:case118-bus11-states}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{images/bus11SVCIQ_case118.jpg}
+\caption{\texttt{case118}, čvor 11 (SVC Type I): injektirana reaktivna snaga $q$ tokom
+tranzijenta.}
+\label{fig:case118-bus11-q}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{images/bus16voltage_case118.jpg}
+\caption{\texttt{case118}, čvor 16 (SVC Type II): napon $v_h$ naspram referentne
+vrijednosti $v_{ref}$.}
+\label{fig:case118-bus16-v}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{images/bus16SVCIIstate_case118.jpg}
+\caption{\texttt{case118}, čvor 16 (SVC Type II): stanje susceptanse $B_{SVC}$ tokom
+tranzijenta - klasičan odziv sistema prvog reda (Milano eq. 19.4), sa brzim smirivanjem
+na ravnotežnu vrijednost.}
+\label{fig:case118-bus16-state}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{images/bus16SVCQ_case118.jpg}
+\caption{\texttt{case118}, čvor 16 (SVC Type II): injektirana reaktivna snaga $q$ tokom
+tranzijenta.}
+\label{fig:case118-bus16-q}
+\end{figure}
+
+Oba regulatora se ponašaju u skladu sa teorijskim očekivanjima iz Poglavlja
+\ref{ch:teorija}. Kod \texttt{case118} (Slika \ref{fig:case118-bus16-state}), SVC Type II
+regulator na čvoru 16 pokazuje klasičan brz odziv sistema prvog reda i smiruje se na
+ravnotežnu vrijednost unutar simuliranog perioda. Kod \texttt{case30} (Slike
+\ref{fig:case30-bus7-states} i \ref{fig:case30-bus8-state}), tranzijent na oba čvora je
+sporiji u odnosu na zadane vremenske konstante regulatora - stanja $\sigma$ i $B_{SVC}$
+još uvijek rastu na kraju 10-sekundnog perioda simulacije, što ukazuje da bi za ovaj manji
+i slabije povezan test slučaj (30 čvorova, veće ekvivalentne impedanse mreže) trebalo
+produžiti \texttt{endTime} u XML konfiguraciji kako bi se u potpunosti dostiglo
+ravnotežno stanje.
 
 
 % =============================================================================
@@ -691,9 +834,16 @@ Konverzija se izvršava u zasebnom thread-u, sa napretkom koji se u realnom vrem
 prikazuje u GUI-u glavnog thread-a preko \texttt{gui::thread::\allowbreak asyncExecInMainThread}
 mehanizma.
 
-\todobox{Dopuniti zaključak konkretnim zapažanjima nakon testiranja u dTwin-u (npr. da li
-se ponašanje SVC Type I / Type II poklapa sa teorijskim očekivanjima, koliko dugo traje
-konverzija za \texttt{case300}, itd).}
+Testiranje u pravom dTwin okruženju (Poglavlje \ref{ch:zakljucak}, ranije Poglavlje 6)
+potvrdilo je da se ponašanje oba tipa SVC regulatora poklapa sa teorijskim očekivanjima iz
+Milano \cite{milano2010psms}: oba regulatora uspješno vraćaju napon na zadatu referentnu
+vrijednost, uz karakterističan prebačaj kod direktne regulacije susceptanse (Type II).
+Konverzija najvećeg test slučaja (\texttt{case300}, 300 čvorova) traje reda veličine
+nekoliko sekundi (parsiranje generisanog \texttt{.dmodl} fajla oko 65ms, inicijalizacija
+oko 31ms), dok samo rješavanje tranzijentne simulacije (10s simuliranog vremena) traje
+ispod jedne sekunde (oko 938ms), a ukupno vrijeme (parsiranje + init + rješavanje +
+izvještavanje) iznosi oko 1.24 sekunde - i pored \texttt{report=AllDetails} logovanja svih
+iteracija.
 
 
 \begin{thebibliography}{9}

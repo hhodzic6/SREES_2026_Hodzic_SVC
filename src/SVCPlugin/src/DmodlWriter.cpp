@@ -32,7 +32,13 @@ namespace
     }
 
     // Appends one summed injection expression (P-part if isP, Q-part otherwise) for a bus,
-    // over all of its YBusEntry neighbors (including its own diagonal entry).
+    // over all of its YBusEntry neighbors (including its own diagonal entry), in polar form:
+    //   P_i = sum_k v_i*v_k*absY_ik*cos(phi_i-phi_k-angleY_ik)
+    //   Q_i = sum_k v_i*v_k*absY_ik*sin(phi_i-phi_k-angleY_ik)
+    // The diagonal (k==i) term is written without a unary minus inside the trig argument
+    // (cos(angleY_ii) instead of cos(-angleY_ii), with the sign for Q pulled out front as
+    // "-" between terms) to match the exact syntax style of dTwin's own bundled polar
+    // power-flow examples - see PROGRESS_NOTES.txt for why this matters.
     void appendInjectionSum(td::MutableString& out, const MatpowerCase& mpCase,
                              const cnt::PushBackVector<const YBusEntry*>& rowEntries, bool isP)
     {
@@ -43,15 +49,20 @@ namespace
             const YBusEntry* pEntry = rowEntries[k];
             td::UINT4 i = busNumberOfRow(mpCase, pEntry->row);
             td::UINT4 j = busNumberOfRow(mpCase, pEntry->col);
+            bool diag = (i == j);
+            bool negative = (!isP && diag);
+
             if (!first)
-                out.append(" + ");
+                out.append(negative ? " - " : " + ");
+            else if (negative)
+                out.append("-");
             first = false;
-            if (isP)
-                out.appendFormat("(e_%u*(G_%u_%u*e_%u - B_%u_%u*f_%u) + f_%u*(G_%u_%u*f_%u + B_%u_%u*e_%u))",
-                    i, i, j, j, i, j, j, i, i, j, j, i, j, j);
+
+            const char* fn = isP ? "cos" : "sin";
+            if (diag)
+                out.appendFormat("v_%u*v_%u*absY_%u_%u*%s(angleY_%u_%u)", i, i, i, i, fn, i, i);
             else
-                out.appendFormat("(f_%u*(G_%u_%u*e_%u - B_%u_%u*f_%u) - e_%u*(G_%u_%u*f_%u + B_%u_%u*e_%u))",
-                    i, i, j, j, i, j, j, i, i, j, j, i, j, j);
+                out.appendFormat("v_%u*v_%u*absY_%u_%u*%s(phi_%u-phi_%u-angleY_%u_%u)", i, j, i, j, fn, i, j, i, j);
         }
         if (first)
             out.append("0");
@@ -96,15 +107,12 @@ void DmodlWriter::writeVars(td::MutableString& out) const
     out.append("\nVars [out=true]:\n");
 
     auto nBus = _case.getNoOfBuses();
-    auto busM = _case.getBus().getManipulator();
     for (td::UINT4 row = 0; row < nBus; ++row)
     {
         td::UINT4 num = busNumberOfRow(_case, row);
         double vm0 = effectiveVm(_case, row);
-        double theta0 = _theta0.getNoOfRows() > row ? _theta0.getManipulator()(row, 0) : 0.0;
-        double e0 = vm0 * std::cos(theta0);
-        double f0 = vm0 * std::sin(theta0);
-        out.appendFormat("\te_%u = %.8f; f_%u = %.8f;\n", num, e0, num, f0);
+        double phi0 = _theta0.getNoOfRows() > row ? _theta0.getManipulator()(row, 0) : 0.0;
+        out.appendFormat("\tv_%u = %.8f; phi_%u = %.8f;\n", num, vm0, num, phi0);
 
         const SvcNodeConfig* pSvc = _config.findNode(num);
         if (pSvc)
@@ -113,6 +121,18 @@ void DmodlWriter::writeVars(td::MutableString& out) const
                 out.appendFormat("\tvM_%u = %.8f; sigma_%u = 0.0;\n", num, vm0, num);
             else
                 out.appendFormat("\tbSvc_%u = 0.0;\n", num);
+
+            // vh/bEff/q used to be PostProc-derived, but dTwin's solver crashes when a
+            // PostProc section is present on models above a certain variable-count
+            // threshold (reproduced even with a single trivial PostProc line on a plain,
+            // SVC-free network - see PROGRESS_NOTES.txt). Defining them as ordinary
+            // algebraic Vars/NLEs instead avoids PostProc entirely and is unaffected by
+            // that bug, since plain Vars+NLEs at this scale are confirmed to work.
+            out.appendFormat("\tvh_%u = %.8f;\n", num, vm0);
+            if (pSvc->type == SvcNodeType::SvcTypeI)
+                out.appendFormat("\tbEff_%u = 0.0; q_%u = 0.0;\n", num, num);
+            else
+                out.appendFormat("\tq_%u = 0.0;\n", num);
         }
     }
 }
@@ -172,8 +192,7 @@ void DmodlWriter::writeParams(td::MutableString& out) const
             {
                 double va0 = busM(row, busCol::Va) * kPi / 180.0;
                 out.appendFormat("\t// Node %u - Slack\n", num);
-                out.appendFormat("\te_%u_spec = %.8f; f_%u_spec = %.8f;\n",
-                    num, vm0 * std::cos(va0), num, vm0 * std::sin(va0));
+                out.appendFormat("\tv_%u_spec = %.8f; phi_%u_spec = %.8f;\n", num, vm0, num, va0);
             }
             else if (type == BusType::PV)
             {
@@ -209,7 +228,7 @@ void DmodlWriter::writeParams(td::MutableString& out) const
         }
     }
 
-    out.append("\n\t// Y-bus matrix (G + jB), built with natID's sparse assembly (see YBusBuilder)\n");
+    out.append("\n\t// Y-bus matrix in polar form (|Y|, angle[Y]), built with natID's sparse assembly (see YBusBuilder)\n");
     const auto& entries = _ybus.getEntries();
     auto nEntries = entries.size();
     for (td::UINT4 k = 0; k < nEntries; ++k)
@@ -217,7 +236,9 @@ void DmodlWriter::writeParams(td::MutableString& out) const
         const YBusEntry& e = entries[k];
         td::UINT4 i = busNumberOfRow(_case, e.row);
         td::UINT4 j = busNumberOfRow(_case, e.col);
-        out.appendFormat("\tG_%u_%u=%.10f; B_%u_%u=%.10f;\n", i, j, e.G, i, j, e.B);
+        double absY = std::sqrt(e.G * e.G + e.B * e.B);
+        double angleY = std::atan2(e.B, e.G);
+        out.appendFormat("\tabsY_%u_%u=%.10f; angleY_%u_%u=%.10f;\n", i, j, absY, i, j, angleY);
     }
 }
 
@@ -234,7 +255,7 @@ void DmodlWriter::writeODEs(td::MutableString& out) const
             continue;
 
         td::String vh;
-        vh.format("sqrt(e_%u*e_%u+f_%u*f_%u)", num, num, num, num);
+        vh.format("v_%u", num);
 
         if (pSvc->type == SvcNodeType::SvcTypeI)
         {
@@ -284,7 +305,20 @@ void DmodlWriter::writeNLEs(td::MutableString& out, const std::function<void(dou
                 appendSvcTypeIBSuscExpr(out, num);
             else
                 out.appendFormat("bSvc_%u", num);
-            out.appendFormat("*(e_%u*e_%u+f_%u*f_%u) + Q_%u_load = 0\n", num, num, num, num, num);
+            out.appendFormat("*(v_%u*v_%u) + Q_%u_load = 0\n", num, num, num);
+
+            out.appendFormat("\tvh_%u - v_%u = 0\n", num, num);
+            if (pSvc->type == SvcNodeType::SvcTypeI)
+            {
+                out.appendFormat("\tbEff_%u - ", num);
+                appendSvcTypeIBSuscExpr(out, num);
+                out.append(" = 0\n");
+                out.appendFormat("\tq_%u - bEff_%u*(v_%u*v_%u) = 0\n", num, num, num, num);
+            }
+            else
+            {
+                out.appendFormat("\tq_%u - bSvc_%u*(v_%u*v_%u) = 0\n", num, num, num, num);
+            }
         }
         else
         {
@@ -297,15 +331,15 @@ void DmodlWriter::writeNLEs(td::MutableString& out, const std::function<void(dou
 
             if (type == BusType::Slack)
             {
-                out.appendFormat("\te_%u - e_%u_spec = 0\n", num, num);
-                out.appendFormat("\tf_%u - f_%u_spec = 0\n", num, num);
+                out.appendFormat("\tphi_%u - phi_%u_spec = 0\n", num, num);
+                out.appendFormat("\tv_%u - v_%u_spec = 0\n", num, num);
             }
             else if (type == BusType::PV)
             {
                 out.append("\t");
                 appendInjectionSum(out, _case, rowEntries, true);
                 out.appendFormat(" - P_%u_inj_spec = 0\n", num);
-                out.appendFormat("\te_%u*e_%u + f_%u*f_%u - v_%u_spec*v_%u_spec = 0\n", num, num, num, num, num, num);
+                out.appendFormat("\tv_%u - v_%u_spec = 0\n", num, num);
             }
             else // PQ
             {
@@ -324,33 +358,6 @@ void DmodlWriter::writeNLEs(td::MutableString& out, const std::function<void(dou
     }
 }
 
-void DmodlWriter::writePostProc(td::MutableString& out) const
-{
-    out.append("\nPostProc:\n");
-
-    auto nBus = _case.getNoOfBuses();
-    for (td::UINT4 row = 0; row < nBus; ++row)
-    {
-        td::UINT4 num = busNumberOfRow(_case, row);
-        const SvcNodeConfig* pSvc = _config.findNode(num);
-        if (!pSvc)
-            continue;
-
-        out.appendFormat("\tvh_%u = sqrt(e_%u*e_%u+f_%u*f_%u)\t[out=true]\n", num, num, num, num, num);
-        if (pSvc->type == SvcNodeType::SvcTypeI)
-        {
-            out.appendFormat("\tbEff_%u = ", num);
-            appendSvcTypeIBSuscExpr(out, num);
-            out.append("\t[out=true]\n");
-            out.appendFormat("\tq_%u = bEff_%u*(e_%u*e_%u+f_%u*f_%u)\t[out=true]\n", num, num, num, num, num, num);
-        }
-        else
-        {
-            out.appendFormat("\tq_%u = bSvc_%u*(e_%u*e_%u+f_%u*f_%u)\t[out=true]\n", num, num, num, num, num, num);
-        }
-    }
-}
-
 void DmodlWriter::writeDmodl(td::MutableString& out, const std::function<void(double)>& progressCb) const
 {
     writeHeader(out);
@@ -358,7 +365,6 @@ void DmodlWriter::writeDmodl(td::MutableString& out, const std::function<void(do
     writeParams(out);
     writeODEs(out);
     writeNLEs(out, progressCb);
-    writePostProc(out);
     out.append("\nend\n");
 }
 

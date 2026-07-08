@@ -464,3 +464,71 @@ case300 -> bus 9 (SVC Type I), bus 13 (SVC Type II)
 (svi su PQ/load busevi u originalnim MATPOWER case-ovima - slobodno promijeni
 izbor u odgovarajućem svc_config_case*.xml ako želiš druge čvorove)
 ================================================================================
+
+================================================================================
+9) PAD DTWIN-A PRI OTVARANJU GENERISANOG .dmodl FAJLA - UZROK I ISPRAVKA
+   (2026-07-06 do 2026-07-08)
+================================================================================
+PROBLEM: Nakon što je plugin stvarno kompajliran i case9_svc.dmodl generisan,
+otvaranje tog fajla u pravom dTwin.exe je REDOVNO rušilo aplikaciju (Windows
+exception 0xc0000409, WER bucket BEX64), dok su manji referentni .dmodl
+fajlovi iz same SDK distribucije (npr. PendulumDAE.dmodl) radili bez problema.
+
+ISTRAGA (skraćeno - preko 20 ciljanih test .dmodl fajlova, uz pomoć korisnika
+koji je ručno otvarao svaki fajl u pravom dTwin-u pošto ja nemam pristup GUI
+automatizaciji za native Windows aplikacije):
+
+Redom ISKLJUČENO kao uzrok (svaki hipotezisan i testiran zasebno):
+  - Limits:/if-else sintaksa (uklonjena iz generatora, i dalje puca)
+  - Dužina reda (280-char red radi bez problema)
+  - CRLF vs LF završeci redova (konvertovano, i dalje puca)
+  - Nedostajući .vmodl (Pendulum radi i bez .vmodl)
+  - sqrt() unutar ODE izraza (testirano na Pendulum+ODE, radi)
+  - Duplo-underscore imena (B_2_2 stil) - radi
+  - Tačka-zarez kao separator više izraza u redu (i sa i bez - Ex_4.dmodl iz
+    SDK-a koristi 7 izraza u jednom redu sa ;, i to radi)
+  - Pravougaone (e,f) naspram polarnim (v,phi) koordinatama - OBOJE pucaju na
+    case9 skali kad se koriste rectangular! (amina je imala identičan problem
+    prije - njen "case9_pravougaono_NE_RADI.dmodl" je potvrda; njen
+    "case9_polarne.dmodl" radi). Generator je PREBAČEN NA POLARNE KOORDINATE
+    (v_i, phi_i umjesto e_i, f_i) - ovo JE stvarno poboljšanje (SVC jednačine
+    su i jednostavnije u polarnom obliku), ALI SAM PO SEBI NIJE riješio crash!
+  - type=DAE sa ~18 NLE jednačina i BEZ ijedne ODE - radi (samo prijavi
+    smislenu grešku "no ODE nor TF blocks in DAE model", ne puca)
+  - Miješanje SVC Type I (2 ODE stanja: vM, sigma) i Type II (1 ODE stanje:
+    bSvc) NA ISTOM modelu - ČESTO (ali ne uvijek) uzrokovalo pad, ali svaki
+    tip PONAOSOB (i po dva Type I, i po dva Type II) radi bez problema na
+    istoj (case9) skali. Testirano je i mnoštvo varijanti (trig vs linearna
+    formula za susceptansu, asimetrija broja pomoćnih varijabli, prigušenje
+    integratora, RK2 vs RK4 metoda integracije) - NIŠTA od toga nije bio
+    stvarni uzrok.
+
+STVARNI UZROK (pronađeno tek nakon ~25 iteracija): dTwin PUCA zbog same
+`PostProc:` SEKCIJE modela, kad broj promjenljivih u modelu pređe određeni
+prag (negdje između Pendulum-ovih 5 i FreqReg_01-ovih ~7, i case9-ovih 18+).
+Ovo je POTPUNO NEZAVISNO od SVC-a: reprodukovano na čisto statičkom mrežnom
+modelu (18 promjenljivih, BEZ ijedne SVC dinamike) sa samo JEDNOM trivijalnom
+PostProc linijom ("vh_1 = v_1") - i to je dovoljno da dTwin padne. Manji
+referentni modeli (Pendulum, FreqReg_01) imaju PostProc sekcije i rade
+normalno - očigledno je ovo bug specifičan za veličinu modela u dTwin-ovoj
+(zatvorenoj, binarnoj) implementaciji PostProc obrade, van naše kontrole.
+
+ISPRAVKA: DmodlWriter.cpp VIŠE NE GENERIŠE PostProc sekciju uopšte.
+Izvedene veličine koje su ranije bile PostProc-računate (vh_i = v_i,
+bEff_i = trig formula za SVC Type I, q_i = injektirana reaktivna snaga) sada
+su obične Vars (algebarske, sa proizvoljnim početnim nagađanjem) uz prateće
+NLE jednačine koje ih definišu (npr. "vh_5 - v_5 = 0"). Funkcionalno
+identično (dTwin-ov solver rješava PostProc dodjele i NLE jednačine na
+suštinski isti način), ali potpuno zaobilazi PostProc mehanizam.
+
+REZULTAT: case9, case30, case118 i case300 (sva četiri test slučaja, uz
+istovremeni SVC Type I i Type II na različitim čvorovima) sada se otvaraju
+i uspješno rješavaju u pravom dTwin-u BEZ ijedne greške - potvrđeno od strane
+korisnika direktnim testiranjem, uključujući vizuelnu inspekciju grafika
+(napon, stanja regulatora, injektirana snaga) koji pokazuju fizički smislene
+tranzijente u skladu sa Milano jednačinama 19.3/19.4.
+
+NAPOMENA ZA BUDUĆNOST: ako se generator ikad ponovo doda PostProc sekciju
+(npr. za neku novu izvedenu veličinu), OBAVEZNO prvo provjeriti na najvećem
+test slučaju (case300) prije nego što se pretpostavi da radi - ovaj bug se
+NE manifestuje na malim modelima.
