@@ -425,33 +425,34 @@ res/testData/case*.m fajlova kao MATPOWER input, odgovarajući
 svc_config_case*.xml kao config, izaberi output .dmodl ime, klikni Convert.
 
 ================================================================================
-7) ŠTA JOŠ NEDOSTAJE (TODO prije predaje)
+7) ŠTA JOŠ NEDOSTAJE (TODO prije predaje) - ažurirano 2026-07-09
 ================================================================================
-- docs/ folder: LyX izvještaj (srrees_izvjestaj.lyx stil kao kod amine) - NIJE
-  napisan, samo je folder napravljen. Sadržaj treba: opis SVC Type I/II teorije
-  (Milano 19.1), opis arhitekture plugina, prikaz generisanog .dmodl-a,
-  rezultati simulacije (grafici iz dTwin-a nakon što pokreneš model), poređenje
-  sa Milano Example 19.1 (Fig 19.4).
-- presentation/: napravi finalnu prezentaciju (PowerPoint ili sl.) i upiši
-  vrijeme trajanja u presentation/ReadMe.txt (5-8 min po uputstvu).
-- OpenDraw dijagrami: uputstvo traži OpenDraw za grafike/dijagrame u
-  dokumentaciji - nisam ga koristio (nemam pristup GUI alatu odavde); ti
-  trebaš napraviti blok-dijagrame (npr. SVC Type I/II kontrolni blok dijagram,
-  arhitektura plugina) u OpenDraw-u za docs/.
-- GitHub: repo folder je lokalno spreman; TI trebaš kreirati GitHub repo
-  "SREES_2026_Hodzic_SVC" i push-ovati (ja nemam tvoje GitHub kredencijale niti
-  smijem to raditi bez eksplicitnog dogovora).
-- Kompajliranje na 2 sistema (macOS + Windows npr.) - nisam mogao testirati
-  ni na jednom odavde (nema toolchain-a). Prioritet #1 kad dobiješ pristup
-  računaru sa Visual Studio/natID SDK instaliranim.
-- Provjera dTwin DSL sintakse uživo: pretpostavio sam da DAE model type
-  podržava kombinaciju Vars/Params/ODEs/NLEs/Limits/PostProc u tom redoslijedu
-  (earthquake primjer ima Vars/Params/ODEs/PostProc bez NLEs, amina-in NL
-  primjer ima Vars/Params/NLEs/Limits bez ODEs - moj DAE kombinuje oba stila).
-  Ovo NISAM mogao provjeriti bez pokretanja dTwin-a - prva stvar za provjeriti
-  kad učitaš generisani .dmodl u pravi dTwin.
-- Code style: pregledaj još jednom da SVE bude lower camel case + "_" prefiks
-  za članove klase (trudio sam se dosljedno, ali vrijedi dvostruka provjera).
+Riješeno (za razliku od ranije verzije ove liste):
+  - docs/izvjestaj.tex je napisan (LaTeX/Overleaf, ne LyX - po dogovoru),
+    kompajlira se čisto, sadrži teoriju, arhitekturu, implementaciju, XML
+    format, testiranje i rezultate stvarne simulacije (case30, case118).
+  - presentation/SVC_Prezentacija.pptx je napravljena (12 slajdova) i
+    ažurirana da odražava stvarnu verifikaciju (uklj. PostProc bug fix).
+  - GitHub repo kreiran i push-ovan: https://github.com/hhodzic6/SREES_2026_Hodzic_SVC
+  - Plugin je STVARNO kompajliran (MSVC/VS Build Tools 2022) i pokrenut
+    end-to-end u pravom dTwin-u - vidi odjeljak 9) za pun opis pada aplikacije
+    koji je pronađen i otklonjen.
+  - dTwin DSL sintaksa je provjerena uživo (uz veliku istragu - vidi 9)) -
+    finalna verzija NE koristi Limits ni PostProc sekcije uopšte.
+
+Još uvijek nedostaje / na tebi je da uradiš:
+  - presentation/ReadMe.txt: upisati STVARNO vrijeme trajanja prezentacije
+    (potrebno je da je izvježbaš naglas - ne mogu ja to procijeniti umjesto
+    tebe).
+  - Kompajliranje na 2 sistema (npr. macOS + Windows) - provjereno samo na
+    ovoj Windows mašini. Ako trebaš dokaz za drugi sistem, javi se.
+  - Opciono: docs/images/ trenutno ima grafike samo za case30 i case118 (12
+    slika) - case9 i case300 su testirani i rade, ali njihovi originalni
+    screenshotovi su izgubljeni tokom obrade slika (vidi git historiju) -
+    ako želiš i njih u izvještaju, ponovo pokreni case9/case300 u dTwin-u,
+    snimi grafike i pošalji mi ih (isti postupak kao za case30/case118).
+  - Code style: pregledaj još jednom da SVE bude lower camel case + "_"
+    prefiks za članove klase.
 
 ================================================================================
 8) TEST SLUČAJEVI - GDJE SU SVC ČVOROVI POSTAVLJENI

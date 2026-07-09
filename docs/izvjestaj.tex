@@ -382,6 +382,7 @@ Rješenje je organizovano kao dvije natID/CMake "solution" cjeline (Slika
 
 \begin{figure}[H]
 \centering
+\resizebox{\textwidth}{!}{%
 \begin{tikzpicture}[
     block/.style={draw,rounded corners,minimum height=1cm,minimum width=2.6cm,align=center,font=\small,fill=blue!6},
     io/.style={draw,rounded corners,minimum height=0.9cm,minimum width=2.3cm,align=center,font=\scriptsize,fill=yellow!12},
@@ -408,7 +409,8 @@ Rješenje je organizovano kao dvije natID/CMake "solution" cjeline (Slika
     \draw[->] (dmodl) -- (out);
 
     \node[draw,dashed,rounded corners,fit=(mpcase)(ybus)(dmodl),inner sep=0.35cm,label={[font=\small]above:\textbf{Converter} (radi na worker thread-u)}] (convbox) {};
-\end{tikzpicture}
+\end{tikzpicture}%
+}
 \caption{Arhitektura toka podataka konvertora.}
 \label{fig:arhitektura}
 \end{figure}
@@ -496,9 +498,9 @@ utiče na tačnost samog DAE modela, samo na kvalitet početnog nagađanja.
 Za svaki čvor mreže generiše se:
 \begin{itemize}
     \item ako čvor \textbf{nije} naveden u SVC XML konfiguraciji: standardni statički
-        model (Slack: fiksni $e,f$; PV: regulacija napona sa mogućnošću prebacivanja u PQ
-        kada se dostigne granica reaktivne snage generatora; PQ: fiksna $P,Q$ injekcija) -
-        identičan format kao kod prošlogodišnjeg statičkog konvertora;
+        model (Slack: fiksni $v,\varphi$; PV: bezuslovna regulacija napona na zadatu
+        vrijednost - bez provjere granice reaktivne snage generatora, radi jednostavnosti;
+        PQ: fiksna $P,Q$ injekcija);
     \item ako \textbf{jeste} naveden: SVC Type I ili Type II dinamički model (jednačine
         \ref{eq:svc1-vm}-\ref{eq:svc1-q} ili \ref{eq:svc2-b}-\ref{eq:svc2-q}), gdje
         algebarska jednačina reaktivne snage zamjenjuje standardnu jednačinu bilansa
@@ -506,11 +508,14 @@ Za svaki čvor mreže generiše se:
 \end{itemize}
 
 Generisani model koristi \texttt{Model[type=DAE]} sekciju sa \texttt{Vars}, \texttt{Params},
-\texttt{ODEs} (samo za SVC čvorove), \texttt{NLEs} (za sve čvorove), \texttt{Limits}
-(anti-windup i PV Q-limit switching) i \texttt{PostProc} (izlazne veličine za grafike:
-napon, efektivna susceptansa/ugao, injektovana reaktivna snaga).
+\texttt{ODEs} (samo za SVC čvorove) i \texttt{NLEs} (za sve čvorove). Naponi se
+predstavljaju u \textbf{polarnim koordinatama} ($v_i$, $\varphi_i$), a $Y_{bus}$ matrica se
+u fajl upisuje u polarnom obliku ($|Y_{ik}|$, $\angle Y_{ik}$) - ovo je promjena u odnosu
+na raniju verziju generatora koja je koristila pravougaone koordinate ($e_i,f_i$) i
+zasebnu \texttt{PostProc} sekciju; razlog promjene je opisan u odjeljku
+\ref{sec:postproc-bug}.
 
-Primjer generisanih parametara i NLE jednačine za jedan SVC Type II čvor (bus 9,
+Primjer generisanih parametara i jednačina za jedan SVC Type II čvor (bus 9,
 \texttt{case9}) - ovo je \textbf{stvaran isječak}, dobijen kompajliranjem projekta (MSVC,
 Visual Studio Build Tools 2022) i pokretanjem konverzije na \texttt{case9.m} +
 \texttt{svc\_config\_case9.xml}, ne ručno napisan primjer:
@@ -521,33 +526,37 @@ P_9_inj_spec = -1.25000000;
 vref_9 = 1.00000000 [out=true];
 Kr_9 = 10.00000000; Tr_9 = 0.05000000;
 bMax_9 = 0.20000000; bMin_9 = -0.05000000;
-cB9Free = true [type=bool out=true];
 ...
 ODEs:
-	if cB9Free:
-		bSvc_9' = (Kr_9*(vref_9 - sqrt(e_9*e_9+f_9*f_9)) - bSvc_9)/Tr_9
-	else:
-		bSvc_9' = 0
-	end
+	bSvc_9' = (Kr_9*(vref_9 - v_9) - bSvc_9)/Tr_9
 ...
 NLEs:
-	(e_9*(G_9_4*e_4 - B_9_4*f_4) + f_9*(G_9_4*f_4 + B_9_4*e_4)) + ... - P_9_inj_spec = 0
-	(f_9*(G_9_4*e_4 - B_9_4*f_4) - e_9*(G_9_4*f_4 + B_9_4*e_4)) + ...
-		- bSvc_9*(e_9*e_9+f_9*f_9) + Q_9_load = 0
+	v_9*v_4*absY_9_4*cos(phi_9-phi_4-angleY_9_4) + ... - P_9_inj_spec = 0
+	v_9*v_4*absY_9_4*sin(phi_9-phi_4-angleY_9_4) + ...
+		- bSvc_9*(v_9*v_9) + Q_9_load = 0
+	vh_9 - v_9 = 0
+	q_9 - bSvc_9*(v_9*v_9) = 0
 \end{lstlisting}
 
+Posljednja dva reda (\texttt{vh\_9}, \texttt{q\_9}) su izvedene veličine (napon i
+injektirana reaktivna snaga, korištene za grafike u \texttt{.vmodl} fajlu) definisane kao
+obične algebarske promjenljive sa pratećom NLE jednačinom, umjesto preko \texttt{PostProc}
+sekcije - vidi odjeljak \ref{sec:postproc-bug} za razlog ove odluke.
+
 Vrijednosti $Y_{bus}$ matrice u generisanom fajlu (npr. $B_{1,1}=-17.3611$, $B_{4,4}=-39.3089$,
-$B_{9,9}=-17.3382$) su provjerene i \textbf{poklapaju se tačno} sa vrijednostima iz
-prošlogodišnjeg (Python) konvertora za isti \texttt{case9} slučaj, što potvrđuje ispravnost
-implementacije izgradnje matrice admitansi. Kompletan generisani fajl (\texttt{case9\_svc.dmodl},
-9837 bajtova) i pripadajući \texttt{case9\_svc.vmodl} nalaze se u
-\texttt{src/TestSVCPlugin/res/testData/output/} u repozitoriju.
+$B_{9,9}=-17.3382$, prije konverzije u polarni oblik) su provjerene i \textbf{poklapaju se
+tačno} sa vrijednostima iz prošlogodišnjeg (Python) konvertora za isti \texttt{case9}
+slučaj, što potvrđuje ispravnost implementacije izgradnje matrice admitansi. Kompletan
+generisani fajl (\texttt{case9\_svc.dmodl}, 6749 bajtova) i pripadajući
+\texttt{case9\_svc.vmodl} nalaze se u \texttt{src/TestSVCPlugin/res/testData/output/} u
+repozitoriju, zajedno sa istim izlazima za \texttt{case30}, \texttt{case118} i
+\texttt{case300}.
 
 \section{XML parsiranje}
 
 XML konfiguracija se parsira preko natID-ovog \texttt{xml::FileParser} (DOM stil
-parsiranja, \texttt{getRootNode()}/\texttt{getChildNode()}/\texttt{getAttribValue()}), isti
-obrazac kao u natID primjeru \texttt{04\_XmlIntro}.
+parsiranja, \texttt{getRootNode()}\allowbreak/\allowbreak\texttt{getChildNode()}\allowbreak/\allowbreak\texttt{getAttribValue()}),
+isti obrazac kao u natID primjeru \texttt{04\_XmlIntro}.
 
 \section{Build sistem (CMake)}
 
@@ -660,9 +669,16 @@ pomoćni alat, ne kao dio rješenja). Skripta provjerava:
     \item da $B_{SVC}(\sigma)$ (jed. \ref{eq:bsvc}) daje ispravne vrijednosti na fizičkim
         granicama ($\sigma=\pi/2$ i $\sigma=\pi$);
     \item da oba regulatora (Type I i Type II) reaguju u ispravnom smjeru (više
-        kapacitivne podrške) nakon pada napona;
-    \item da anti-windup limiter ispravno ograničava stanje na zadatim granicama.
+        kapacitivne podrške) nakon pada napona.
 \end{enumerate}
+
+Granice $\sigma_{max}/\sigma_{min}$ i $B_{max}/B_{min}$ (Milano Table D.10/D.11) se
+generišu kao \texttt{Params} u izlaznom \texttt{.dmodl} fajlu radi potpunosti podataka, ali
+se ne provode kao aktivno ograničenje (anti-windup) unutar same DAE simulacije - ranija
+verzija generatora je imala \texttt{Limits:} sekciju sa if/else prebacivanjem stanja na
+granicu, ali je uklonjena tokom istrage pada aplikacije opisane u odjeljku
+\ref{sec:postproc-bug} (naknadno je utvrđeno da to nije bio stvarni uzrok pada, ali
+pojednostavljenje je zadržano jer nije bilo neophodno za osnovnu funkcionalnost).
 
 Ova provjera je otkrila i ispravila stvarnu grešku znaka u prvobitnoj rekonstrukciji
 jednačine \ref{eq:bsvc} (OCR ekstrakcija teksta iz PDF knjige je izgubila $\pi$ simbole u
@@ -682,7 +698,9 @@ matrice za \texttt{case9} tačno se poklapaju sa prošlogodišnjim (nezavisno im
 konvertorom za isti test slučaj (vidi Poglavlje \ref{ch:implementacija}, Listing
 \ref{lst:dmodl-svc2}).
 
-\paragraph{Otklonjen pad aplikacije pri otvaranju generisanog modela.} Tokom testiranja u
+\paragraph{Otklonjen pad aplikacije pri otvaranju generisanog modela.}
+\label{sec:postproc-bug}
+Tokom testiranja u
 pravom dTwin okruženju otkriven je pad aplikacije (crash, kod izuzetka
 \texttt{0xc0000409}) koji se dešavao isključivo pri otvaranju generisanih \texttt{.dmodl}
 fajlova većih razmjera (\texttt{case9} i veći), a ne i kod manjih referentnih modela
@@ -834,7 +852,7 @@ Konverzija se izvršava u zasebnom thread-u, sa napretkom koji se u realnom vrem
 prikazuje u GUI-u glavnog thread-a preko \texttt{gui::thread::\allowbreak asyncExecInMainThread}
 mehanizma.
 
-Testiranje u pravom dTwin okruženju (Poglavlje \ref{ch:zakljucak}, ranije Poglavlje 6)
+Testiranje u pravom dTwin okruženju (Poglavlje \ref{ch:testiranje})
 potvrdilo je da se ponašanje oba tipa SVC regulatora poklapa sa teorijskim očekivanjima iz
 Milano \cite{milano2010psms}: oba regulatora uspješno vraćaju napon na zadatu referentnu
 vrijednost, uz karakterističan prebačaj kod direktne regulacije susceptanse (Type II).
